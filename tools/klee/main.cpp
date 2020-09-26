@@ -1258,6 +1258,10 @@ void KleeHandler::dumpCallPath(const ExecutionState &state,
       delete buf;
     }
   }
+
+  *file << ";;-- Count Call Me calls --\n";
+  *file << "count: ";
+  *file << std::to_string(state.call_count_me_counter);
 }
 
 // load a .path file
@@ -1847,6 +1851,8 @@ static const char *modelledExternals[] = {
   "klee_trace_ret_ptr_field", 
 
   "klee_map_symbol_names",
+
+  "klee_call_count_me",
 
   /* tracing functions end */
 
