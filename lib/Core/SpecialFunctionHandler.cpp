@@ -999,6 +999,7 @@ void SpecialFunctionHandler::handleDivRemOverflow(ExecutionState &state,
 void SpecialFunctionHandler::handleTraceRet(ExecutionState &state,
                                             KInstruction *target,
                                             std::vector<ref<Expr> > &arguments) {
+  state.call_count_me_counter++;
   state.traceRet();
 }
 

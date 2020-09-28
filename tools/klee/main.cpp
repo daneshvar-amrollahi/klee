@@ -1259,9 +1259,10 @@ void KleeHandler::dumpCallPath(const ExecutionState &state,
     }
   }
 
-  *file << ";;-- Count Call Me calls --\n";
-  *file << "count: ";
-  *file << std::to_string(state.call_count_me_counter);
+  *file << ";;-- Count Call Me calls --\n"
+        << "count: "
+        << std::to_string(state.call_count_me_counter)
+        << "\n";
 }
 
 // load a .path file
