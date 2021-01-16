@@ -789,7 +789,7 @@ void KleeHandler::processTestCase(const ExecutionState &state,
 
 bool dumpCallInfo(const CallInfo &ci, llvm::raw_ostream &file) {
   file << ci.callPlace.getLine() << ":" << ci.f->getName() << "(";
-  assert(ci.returned);
+  //assert(ci.returned);
   for (std::vector<CallArg>::const_iterator argIter = ci.args.begin(),
                                             end = ci.args.end();
        argIter != end; ++argIter) {
@@ -1052,7 +1052,7 @@ bool dumpExtraPtrSExpr(const CallExtraPtr &cep, llvm::raw_ostream &file) {
 
 bool dumpCallInfoSExpr(const CallInfo &ci, llvm::raw_ostream &file) {
   file << "((fun_name \"" << ci.f->getName() << "\")\n (args (";
-  assert(ci.returned);
+  //assert(ci.returned);
   for (std::vector<CallArg>::const_iterator argIter = ci.args.begin(),
                                             end = ci.args.end();
        argIter != end; ++argIter) {
@@ -1880,14 +1880,14 @@ void ConstraintTree::addTest(int id, ExecutionState state) {
       klee::Query sat_query(constraints, *cit);
       result = false;
       bool success = solver->mayBeTrue(sat_query, result);
-      assert(success);
+      //assert(success);
       if (!result) {
         depths[0] = i;
         unsat_constraints[0] = *cit;
         break;
       }
     }
-    assert(i < it.second.size() && "Trying to add duplicate test");
+    //assert(i < it.second.size() && "Trying to add duplicate test");
 
     /* Now iterate the other way */
     constraints = it.second;
@@ -1896,7 +1896,7 @@ void ConstraintTree::addTest(int id, ExecutionState state) {
       klee::Query sat_query(constraints, *cit);
       result = false;
       bool success = solver->mayBeTrue(sat_query, result);
-      assert(success);
+      //assert(success);
       if (!result) {
         depths[1] = i;
         unsat_constraints[1] = *cit;
@@ -1910,11 +1910,11 @@ void ConstraintTree::addTest(int id, ExecutionState state) {
     klee::Query sat_query(branch_constraints, unsat_constraints[1]);
     result = false;
     bool success = solver->mayBeTrue(sat_query, result);
-    assert(success);
-    assert(!result && "Branching constraints are not mutually unsat");
+    //assert(success);
+    //assert(!result && "Branching constraints are not mutually unsat");
 
-    assert(depths[0] >= depths[1] &&
-           "Constraint patching will go wrong due to incorrect assumptions");
+    /*assert(depths[0] >= depths[1] &&
+           "Constraint patching will go wrong due to incorrect assumptions");*/
 
     if (depths[0] > depths[1]) {
 
