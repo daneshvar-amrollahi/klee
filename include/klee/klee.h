@@ -287,6 +287,11 @@ int traced_variable_type(char *variable, char **type);
 
 void klee_map_symbol_names(char* symbol_name, int occurence, void*key, int width);
 
+#define KLEE_PERF_IRREV(funcdef) \
+  klee_open_merge(); \
+  funcdef \
+  klee_close_merge();
+
 #define PERF_MODEL_BRANCH(param, val1, val2)                                   \
   if (param) {                                                                 \
     param = val1;                                                              \
