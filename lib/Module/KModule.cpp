@@ -24,6 +24,8 @@
 #include "klee/OptionCategories.h"
 #include "klee/ExecutionState.h"
 
+#include "llvm/Analysis/RegionInfo.h"
+
 #if LLVM_VERSION_CODE >= LLVM_VERSION(4, 0)
 #include "llvm/Bitcode/BitcodeWriter.h"
 #else
@@ -214,6 +216,27 @@ injectStaticConstructorsAndDestructors(Module *m,
   }
 }
 
+//////////////////////////////////////////////////////////////// Begin auxiliary taint region Function pass
+// TaintRegionsInfo - The first implementation, without getAnalysisUsage.
+struct TaintRegionsInfoPass : public RegionInfoPass {
+  static char ID; // Pass identification, replacement for typeid
+  std::map<BasicBlock *, int> *br; 
+  TaintRegionsInfoPass(std::map<llvm::BasicBlock *, int > *regions) : br(regions) { llvm::errs() <<"WTF!@"; }
+
+  bool runOnFunction(Function &F) override {
+      bool result = RegionInfoPass::runOnFunction(F);
+
+      for (auto& bb : F.getBasicBlockList()) {
+        br->insert(std::make_pair(&bb, this->getRegionInfo().getRegionFor(&bb)->getDepth()));
+      }
+
+      return result;
+  }
+
+  StringRef getPassName() const override { return "TaintRegionInfo"; }
+};
+//////////////////////////////////////////////////////////////// End auxiliary taint region Function pass
+
 void KModule::addInternalFunction(const char* functionName){
   Function* internalFunction = module->getFunction(functionName);
   if (!internalFunction) {
@@ -308,6 +331,13 @@ void KModule::optimiseAndPrepare(
   pm3.add(new IntrinsicCleanerPass(*targetData));
   pm3.add(new PhiCleanerPass());
   pm3.run(*module);
+
+  // klee-taint: add region pass
+  if (opts.CalculateRegions) {
+    LegacyLLVMPassManagerTy pm;
+    pm.add(new TaintRegionsInfoPass(&this->regions));
+    pm.run(*module);
+  }
 }
 
 void KModule::manifest(InterpreterHandler *ih, bool forceSourceOutput) {

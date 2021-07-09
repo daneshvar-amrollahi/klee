@@ -174,6 +174,11 @@ public:
   HANDLER(handlePossiblyHavoc);
   HANDLER(handleMapSymbolNames);
   HANDLER(handleAddBPFCall);
+  // klee-taint
+  HANDLER(handleSetTaint);
+  HANDLER(handleGetTaint);
+  HANDLER(handleSetPcTaint);
+  HANDLER(handleGetPcTaint);
 #undef HANDLER
 };
 } // namespace klee

@@ -107,7 +107,8 @@ ObjectState::ObjectState(const MemoryObject *mo)
     updates(0, 0),
     size(mo->size),
     readOnly(false),
-    accessible(true) {
+    accessible(true),
+    taints(nullptr) {
   mo->refCount++;
   if (!UseConstantArrays) {
     static unsigned id = 0;
@@ -130,7 +131,8 @@ ObjectState::ObjectState(const MemoryObject *mo, const Array *array)
     updates(array, 0),
     size(mo->size),
     readOnly(false),
-    accessible(true) {
+    accessible(true),
+    taints(nullptr) {
   mo->refCount++;
   makeSymbolic();
   memset(concreteStore, 0, size);
@@ -148,7 +150,8 @@ ObjectState::ObjectState(const ObjectState &os)
     size(os.size),
     readOnly(false),
     accessible(os.accessible),
-    inaccessible_message(os.inaccessible_message) {
+    inaccessible_message(os.inaccessible_message),
+    taints(nullptr) {
   assert(!os.readOnly && "no need to copy read only object?");
   if (object)
     object->refCount++;
@@ -160,6 +163,11 @@ ObjectState::ObjectState(const ObjectState &os)
   }
 
   memcpy(concreteStore, os.concreteStore, size*sizeof(*concreteStore));
+
+  if (os.taints) {
+    taints = new TaintSet[os.size];
+    memcpy(taints, os.taints, size*sizeof(*taints));
+  }
 }
 
 ObjectState::~ObjectState() {
@@ -167,6 +175,7 @@ ObjectState::~ObjectState() {
   if (concreteMask) delete concreteMask;
   if (flushMask) delete flushMask;
   if (knownSymbolics) delete[] knownSymbolics;
+  if (taints) delete[] taints;
   delete[] concreteStore;
 
   if (object)
@@ -703,4 +712,22 @@ void ObjectState::print() const {
   for (const UpdateNode *un=updates.head; un; un=un->next) {
     llvm::errs() << "\t\t[" << un->index << "] = " << un->value << "\n";
   }
+}
+
+// klee-taint
+void ObjectState::writeByteTaint(unsigned offset, TaintSet taint) {
+  if (!taints) {
+    if (taint == EMPTYTAINTSET)
+      return;
+    taints = new TaintSet[size];
+    memset(taints, 0, size * sizeof(*taints));
+  }
+  taints[offset] = taint;
+}
+
+TaintSet ObjectState::readByteTaint(unsigned offset) const {
+  if (!taints) {
+    return EMPTYTAINTSET;
+  }
+  return taints[offset];
 }

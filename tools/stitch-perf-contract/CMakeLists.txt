@@ -13,6 +13,7 @@ add_executable(stitch-perf-contract
 set(KLEE_LIBS
   kleaverExpr
   kleeCore
+  dl
 )
 
 target_link_libraries(stitch-perf-contract ${KLEE_LIBS})

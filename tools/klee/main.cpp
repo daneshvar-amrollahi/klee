@@ -236,6 +236,18 @@ cl::OptionCategory
     ChecksCat("Checks options",
               "These options control some of the checks being done by KLEE.");
 
+// klee-taint options
+cl::opt<Interpreter::TaintConfig::Config>
+Taint("taint", 
+      cl::desc("Track tainting (none by default)."),
+      cl::values(clEnumValN(Interpreter::TaintConfig::NoTaint, "none", "Don't track tainting (default)"),
+                 clEnumValN(Interpreter::TaintConfig::Direct, "direct", "Track direct tainting assignments"),
+                 clEnumValN(Interpreter::TaintConfig::ControlFlow, "controlflow", "Track control-flow indirect tainting"),
+                 clEnumValN(Interpreter::TaintConfig::Regions, "regions", "Region-based tainting")
+                 KLEE_LLVM_CL_VAL_END),
+      cl::init(Interpreter::TaintConfig::NoTaint),
+      cl::cat(ChecksCat));
+
 cl::opt<bool>
     CheckDivZero("check-div-zero",
                  cl::desc("Inject checks for division-by-zero (default=true)"),
@@ -2156,6 +2168,9 @@ static const char *dontCareExternals[] = {
   "__errno_location",
   "fstat",
 #endif
+  // klee-taint
+  "klee_get_taint",
+  "klee_set_taint",
 
   // static information, pretty ok to return
   "getegid",
@@ -2558,6 +2573,9 @@ int main(int argc, char **argv, char **envp) {
                                   /*CheckDivZero=*/CheckDivZero,
                                   /*CheckOvershift=*/CheckOvershift);
 
+  // klee-taint options
+  Opts.CalculateRegions = Taint == Interpreter::TaintConfig::Regions;
+
   if (WithPOSIXRuntime) {
     SmallString<128> Path(Opts.LibraryDir);
     llvm::sys::path::append(Path, "libkleeRuntimePOSIX.bca");
@@ -2663,6 +2681,25 @@ int main(int argc, char **argv, char **envp) {
   }
 
   Interpreter::InterpreterOptions IOpts;
+
+  // klee-taint interpreter options
+  IOpts.TaintConfig = Interpreter::TaintConfig(Taint);
+
+  switch(Taint) {
+    case Interpreter::TaintConfig::Direct: 
+      llvm::errs() << "Using direct tainting\n";
+      break;
+    case Interpreter::TaintConfig::ControlFlow: 
+      llvm::errs() << "Using direct and control flow based tainitng\n";
+      break;
+    case Interpreter::TaintConfig::Regions: 
+      llvm::errs() << "Using direct and control flow based tainitng with SESE support\n";
+      break;
+    case Interpreter::TaintConfig::NoTaint:
+    default:
+      break;
+  }
+
   IOpts.MakeConcreteSymbolic = MakeConcreteSymbolic;
   IOpts.CondoneUndeclaredHavocs = CondoneUndeclaredHavocs;
   KleeHandler *handler = new KleeHandler(pArgc, pArgv);

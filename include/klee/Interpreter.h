@@ -61,6 +61,7 @@ public:
   /// ModuleOptions - Module level options which can be set when
   /// registering a module with the interpreter.
   struct ModuleOptions {
+    bool CalculateRegions; /// klee-taint
     std::string LibraryDir;
     std::string EntryPoint;
     bool Optimize;
@@ -81,9 +82,35 @@ public:
 	  SMTLIB2 //.SMT2 files (SMTLIB version 2 files)
   };
 
+  class TaintConfig {
+    public:
+      enum Config {
+        Direct = 0,
+        ControlFlow,
+        Regions,
+        NoTaint = 100
+      };
+    private:
+      Config config;
+
+    public:
+      TaintConfig(Config config): config(config) {}
+  
+      bool has(Config config) const {
+        if (this->config == NoTaint) {
+                return config == NoTaint;
+        }
+        // A config also has all previously options too 
+        return config <= this->config;
+      }
+  };
+
   /// InterpreterOptions - Options varying the runtime behavior during
   /// interpretation.
   struct InterpreterOptions {
+    // klee-taint
+    class TaintConfig TaintConfig;
+  
     /// A frequency at which to make concrete reads return constrained
     /// symbolic values. This is used to test the correctness of the
     /// symbolic execution on concrete programs.
@@ -94,7 +121,8 @@ public:
     bool CondoneUndeclaredHavocs;
 
     InterpreterOptions()
-      : MakeConcreteSymbolic(false),
+      : TaintConfig(TaintConfig.NoTaint),
+        MakeConcreteSymbolic(false),
         CondoneUndeclaredHavocs(false)
     {}
   };

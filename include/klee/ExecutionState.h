@@ -19,6 +19,8 @@
 #include "klee/MergeHandler.h"
 #include "klee/util/GetExprSymbols.h"
 
+#include "klee/Taint.h"
+
 // FIXME: We do not want to be exposing these? :(
 #include "../../lib/Core/AddressSpace.h"
 #include "klee/Internal/Module/KInstIterator.h"
@@ -30,6 +32,7 @@
 #include <regex>
 #include <set>
 #include <vector>
+#include <stack>
 
 namespace llvm {
 class Function;
@@ -70,6 +73,9 @@ struct StackFrame {
   // does not pass vaarg through as expected). VACopy is lowered inside
   // of intrinsic lowering.
   MemoryObject *varargs;
+
+  //SESE Region Stack of taints
+  std::stack<TaintSet> regionStack; //stack of taints
 
   StackFrame(KInstIterator caller, KFunction *kf);
   StackFrame(const StackFrame &s);
@@ -371,8 +377,9 @@ public:
 
   unsigned int bpf_calls;
 
+  TaintSet taint; // klee-taint lpc Program counter taint
 private:
-  ExecutionState() : ptreeNode(0), bpf_calls(0) {}
+  ExecutionState() : ptreeNode(0), bpf_calls(0), taint(0) {}
 
   void loopRepetition(const llvm::Loop *dstLoop, TimingSolver *solver,
                       bool *terminate);
@@ -451,6 +458,14 @@ public:
   void terminateState(ExecutionState **replace);
   void induceInvariantsForThisLoop(KInstruction *target);
   void startInvariantSearch();
+
+  // klee-taint
+  TaintSet getPCTaint();
+  void     setPCTaint(TaintSet new_taint);
+
+  int  getRegionDepth();
+  void enterRegion();
+  void leaveRegion();
 };
 } // namespace klee
 

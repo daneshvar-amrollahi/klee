@@ -20,6 +20,8 @@
 #include "klee/Internal/Module/KModule.h"
 #include "klee/OptionCategories.h"
 
+#include "klee/Internal/Support/Debug.h"
+
 #include "klee/Internal/Support/ErrorHandling.h"
 #include "klee/LoopAnalysis.h"
 
@@ -57,13 +59,17 @@ StackFrame::StackFrame(KInstIterator _caller, KFunction *_kf)
     : caller(_caller), kf(_kf), callPathNode(0), minDistToUncoveredOnReturn(0),
       varargs(0) {
   locals = new Cell[kf->numRegisters];
+  // klee-taint
+  for (unsigned i=0; i<kf->numRegisters; i++)
+    locals[i].taint=0;
 }
 
 StackFrame::StackFrame(const StackFrame &s)
     : caller(s.caller), kf(s.kf), callPathNode(s.callPathNode),
       allocas(s.allocas),
       minDistToUncoveredOnReturn(s.minDistToUncoveredOnReturn),
-      varargs(s.varargs) {
+      varargs(s.varargs),
+      regionStack(s.regionStack) {
   locals = new Cell[s.kf->numRegisters];
   for (unsigned i = 0; i < s.kf->numRegisters; i++)
     locals[i] = s.locals[i];
@@ -83,7 +89,8 @@ ExecutionState::ExecutionState(KFunction *kf)
       forkDisabled(false),
       ptreeNode(0),
       steppedInstructions(0),
-      relevantSymbols(), doTrace(true), condoneUndeclaredHavocs(false), bpf_calls(0) {
+      relevantSymbols(), doTrace(true), condoneUndeclaredHavocs(false), bpf_calls(0),
+      taint(0) {
   pushFrame(0, kf);
 }
 
@@ -145,7 +152,9 @@ ExecutionState::ExecutionState(const ExecutionState &state)
       callPath(state.callPath),
       relevantSymbols(state.relevantSymbols), doTrace(state.doTrace),
       condoneUndeclaredHavocs(state.condoneUndeclaredHavocs),
-      bpf_calls(state.bpf_calls)
+      bpf_calls(state.bpf_calls),
+
+      taint(state.taint)
 {
   for (unsigned int i=0; i<symbolics.size(); i++)
     symbolics[i].first->refCount++;
@@ -175,11 +184,40 @@ ExecutionState *ExecutionState::branch() {
   ExecutionState *falseState = new ExecutionState(*this);
   falseState->coveredNew = false;
   falseState->coveredLines.clear();
+  falseState->taint = this->taint;
 
   weight *= .5;
   falseState->weight -= weight;
 
   return falseState;
+}
+
+// Current Program counter taint getter
+TaintSet ExecutionState::getPCTaint() {
+    return taint;
+}
+// Current Program counter taint setter
+void ExecutionState::setPCTaint(TaintSet new_taint) {
+    taint = new_taint;
+    KLEE_DEBUG_WITH_TYPE("klee_runtime", llvm::errs() << "PC TAINTED! " << taint << "\n");
+}
+
+// Get the depth of the SESE region stack
+int ExecutionState::getRegionDepth() {
+    return stack.back().regionStack.size();
+}
+
+// Called when entering a new SESE region 
+void ExecutionState::enterRegion() {
+    stack.back().regionStack.push(taint);
+    KLEE_DEBUG_WITH_TYPE("klee_runtime", llvm::errs() << "REGION CHANGED! PUSH!" << taint << "\n");
+}
+
+// Called when leaving a SESE region 
+void ExecutionState::leaveRegion() {
+    taint = stack.back().regionStack.top();
+    stack.back().regionStack.pop();
+    
 }
 
 void ExecutionState::pushFrame(KInstIterator caller, KFunction *kf) {
