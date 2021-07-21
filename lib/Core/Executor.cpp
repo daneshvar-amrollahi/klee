@@ -92,8 +92,6 @@
 #include <sys/mman.h>
 #include <vector>
 
-#include <iostream>
-
 using namespace llvm;
 using namespace klee;
 
@@ -453,6 +451,17 @@ const char *Executor::TerminateReasonNames[] = {
   [ Inaccessible ] = "inaccessible",
   [ Unhandled ] = "xxx",
 };
+
+llvm::raw_ostream& errs_once(const void* id) {
+  static std::set<const void*> _id_mem;
+
+  if (_id_mem.find(id) != _id_mem.end())
+    return llvm::nulls();
+
+  _id_mem.insert(id);
+
+  return llvm::errs();
+}
 
 Executor::Executor(LLVMContext &ctx, const InterpreterOptions &opts,
                    InterpreterHandler *ih)
@@ -1943,7 +1952,8 @@ void Executor::executeInstruction(ExecutionState &state, KInstruction *ki) {
       }
 
       if (eval(ki, 0, state).taint == TaintType::TaintSecret)
-        llvm::errs() << "[!] Branch-based leakage detected\n\t" << *ki->inst << "\n";
+        errs_once(ki) << "[!] Branch-based leakage detected\n\t" << *ki->inst << "\n\t" << "in '" << ki->info->file
+                      << "':" << ki->info->line << ":" << ki->info->column << "\n";
 
       Executor::StatePair branches = fork(state, cond, false);
 
@@ -2390,7 +2400,8 @@ void Executor::executeInstruction(ExecutionState &state, KInstruction *ki) {
     bindLocal(ki, state, UDivExpr::create(left.value, right.value),
               left.taint | right.taint);
     if (getDestCell(state, ki).taint == klee::TaintSecret)
-      std::cout << "NOT CONSTANT TIME!" << std::endl;
+        errs_once(ki) << "[!] Constant-time violation detected\n\t" << *ki->inst << "\n\t" << "in '" << ki->info->file
+                      << "':" << ki->info->line << ":" << ki->info->column << "\n";
     break;
   }
 
@@ -2554,8 +2565,8 @@ void Executor::executeInstruction(ExecutionState &state, KInstruction *ki) {
     Cell left = eval(ki, 0, state);
 
     if (left.taint == TaintType::TaintSecret)
-      llvm::errs() << "[!] Cache-based leakage detected\n\t" << *ki->inst << "\n";
-      // klee_warning_once(ki, "[!] Cache-based leakage detected\n\t%s", ki->info);
+        errs_once(ki) << "[!] Cache-based leakage detected\n\t" << *ki->inst << "\n\t" << "in '" << ki->info->file
+                      << "':" << ki->info->line << ":" << ki->info->column << "\n";
 
     executeMemoryOperation(state, false, left.value, 0, ki, left.taint, 0);
     break;
@@ -2565,7 +2576,8 @@ void Executor::executeInstruction(ExecutionState &state, KInstruction *ki) {
     Cell right = eval(ki, 1, state);
 
     if (right.taint == TaintType::TaintSecret)
-      llvm::errs() << "[!] Cache-based leakage detected\n\t" << *ki->inst << "\n";
+        errs_once(ki) << "[!] Cache-based leakage detected\n\t" << *ki->inst << "\n\t" << "in '" << ki->info->file
+                      << "':" << ki->info->line << ":" << ki->info->column << "\n";
 
     executeMemoryOperation(state, true, right.value, left.value, ki,
                            right.taint, left.taint);
