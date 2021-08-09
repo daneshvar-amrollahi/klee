@@ -22,3 +22,17 @@ files, pipes, environment variables, and passing command line
 arguments.
 
 For further information, see the [webpage](http://klee.github.io/).
+
+## Leakage Analysis
+From the *examples/taint* directory:
+```bash
+git clone https://github.com/ntauth/openssl.git
+cd openssl
+git checkout 3.0.0-cmake
+```
+To run an example from the *examples/taint* directory:
+```bash
+cd aes
+make       # Run leakage analysis
+make clean # Clean analysis artifacts
+```

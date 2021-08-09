@@ -16,7 +16,14 @@
 #include "llvm/Support/DataTypes.h"
 #include "llvm/Support/raw_ostream.h"
 
+#include "../lib/Core/Memory.h"
+
 #include <vector>
+
+#include <functional>
+#include <set>
+#include <unordered_map>
+#include <tuple>
 
 namespace llvm {
   class Instruction;
@@ -26,7 +33,6 @@ namespace klee {
   class Executor;
   struct InstructionInfo;
   class KModule;
-
 
   /// KInstruction - Intermediate instruction representation used
   /// during execution.
@@ -42,10 +48,20 @@ namespace klee {
     /// Destination register index.
     unsigned dest;
 
+    /// Map of memory objects to their accessed offsets
+    std::unordered_map<
+      const ObjectState*,
+      std::set<unsigned>,
+      ObjectStateCmp::Hash,
+      ObjectStateCmp::Equal > accessed_object_offsets;
+    unsigned int total_accessed_offsets;
   public:
+    KInstruction();
     virtual ~KInstruction();
     std::string getSourceLocation() const;
 
+    /// leak-amt
+    bool logObjectAccess(const ObjectState* os, unsigned offset);
   };
 
   struct KGEPInstruction : KInstruction {

@@ -92,6 +92,8 @@
 #include <sys/mman.h>
 #include <vector>
 
+#include <tuple>
+
 using namespace llvm;
 using namespace klee;
 
@@ -453,12 +455,14 @@ const char *Executor::TerminateReasonNames[] = {
 };
 
 llvm::raw_ostream& errs_once(const void* id) {
-  static std::set<const void*> _id_mem;
+  static std::set<std::tuple<const void*, unsigned>> _id_mem;
 
-  if (_id_mem.find(id) != _id_mem.end())
+  const KInstruction *ki = reinterpret_cast<const KInstruction*>(id); // TODO: Temporary!!
+
+  if (_id_mem.find({ id, ki->total_accessed_offsets }) != _id_mem.end())
     return llvm::nulls();
 
-  _id_mem.insert(id);
+  _id_mem.insert({ id, ki->total_accessed_offsets });
 
   return llvm::errs();
 }
@@ -1952,7 +1956,7 @@ void Executor::executeInstruction(ExecutionState &state, KInstruction *ki) {
       }
 
       if (eval(ki, 0, state).taint == TaintType::TaintSecret)
-        errs_once(ki) << "[!] Branch-based leakage detected\n\t" << *ki->inst << "\n\t" << "in '" << ki->info->file
+        errs_once(ki) << "[!] Branch-based leakage detected\n\t - leak-amt: " << ki->total_accessed_offsets << " - " << *ki->inst << "\n\t" << "in '" << ki->info->file
                       << "':" << ki->info->line << ":" << ki->info->column << "\n";
 
       Executor::StatePair branches = fork(state, cond, false);
@@ -2400,7 +2404,7 @@ void Executor::executeInstruction(ExecutionState &state, KInstruction *ki) {
     bindLocal(ki, state, UDivExpr::create(left.value, right.value),
               left.taint | right.taint);
     if (getDestCell(state, ki).taint == klee::TaintSecret)
-        errs_once(ki) << "[!] Constant-time violation detected\n\t" << *ki->inst << "\n\t" << "in '" << ki->info->file
+        errs_once(ki) << "[!] Constant-time violation detected\n\t - leak-amt: " << ki->total_accessed_offsets << " - "<< *ki->inst << "\n\t" << "in '" << ki->info->file
                       << "':" << ki->info->line << ":" << ki->info->column << "\n";
     break;
   }
@@ -2576,7 +2580,7 @@ void Executor::executeInstruction(ExecutionState &state, KInstruction *ki) {
     Cell right = eval(ki, 1, state);
 
     if (right.taint == TaintType::TaintSecret)
-        errs_once(ki) << "[!] Cache-based leakage detected\n\t" << *ki->inst << "\n\t" << "in '" << ki->info->file
+        errs_once(ki) << "[!] Cache-based leakage detected\n\t - leak-amt: " << ki->total_accessed_offsets << " - " << *ki->inst << "\n\t" << "in '" << ki->info->file
                       << "':" << ki->info->line << ":" << ki->info->column << "\n";
 
     executeMemoryOperation(state, true, right.value, left.value, ki,
@@ -4029,10 +4033,16 @@ void Executor::executeMemoryOperation(ExecutionState &state,
             // klee-taint: propagate taint from memop
             if (interpreterOpts.TaintConfig.has(TaintConfig::Direct)) {
               unsigned offset_cnt;
+              TaintSet taint = taintw | taintr;
+
               toConstant(state, offset, "write taint symbolic offset not impl")
                   ->toMemory(&offset_cnt);
               for (unsigned j = 0; j < type / 8; j++)
-                wos->writeByteTaint(offset_cnt + j, taintw | taintr);
+                wos->writeByteTaint(offset_cnt + j, taint);
+              
+              /// leak-amt
+              if (taint == TaintType::TaintSecret)
+                target->logObjectAccess(wos, offset_cnt);
             }
           }
         } else {
@@ -4105,10 +4115,16 @@ void Executor::executeMemoryOperation(ExecutionState &state,
             // klee-taint
             if (interpreterOpts.TaintConfig.has(TaintConfig::Direct)) {
               unsigned offset_cnt;
+              TaintSet taint = taintw | taintr;
+  
               ref<ConstantExpr> foo = toConstant(state, offset, "write taint symbolic offset not impl");
               foo->toMemory(&offset_cnt);
               for (unsigned j = 0; j < type / 8; j++)
-                wos->writeByteTaint(offset_cnt + j, taintw | taintr);
+                wos->writeByteTaint(offset_cnt + j, taint);
+
+              /// leak-amt
+              if (taint == TaintType::TaintSecret)
+                target->logObjectAccess(wos, offset_cnt);
             }
           }
         } else {

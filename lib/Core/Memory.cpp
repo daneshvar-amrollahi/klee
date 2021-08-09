@@ -731,3 +731,14 @@ TaintSet ObjectState::readByteTaint(unsigned offset) const {
   }
   return taints[offset];
 }
+
+/// leak-amt
+bool ObjectStateCmp::Equal::operator()(const ObjectState *lhs,
+                                  const ObjectState *rhs) const {
+  return lhs->getObject() == rhs->getObject();
+}
+
+/// leak-amt
+size_t ObjectStateCmp::Hash::operator() (const ObjectState *os) const {
+  return std::hash<const void *>()(os->getObject());
+}

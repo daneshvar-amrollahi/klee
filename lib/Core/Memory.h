@@ -236,7 +236,6 @@ public:
 
   const Array *forgetThese(const BitArray *bytesToForget);
   const Array *forgetAll();
-
 private:
   const UpdateList &getUpdates() const;
 
@@ -265,6 +264,18 @@ private:
 
   ArrayCache *getArrayCache() const;
 };
+
+/// leak-amt
+namespace ObjectStateCmp
+{
+  struct Equal {
+    bool operator()(const ObjectState *lhs, const ObjectState *rhs) const;
+  };
+
+  struct Hash {
+    size_t operator()(const ObjectState *os) const;
+  };
+}
 
 } // End klee namespace
 

@@ -97,3 +97,16 @@ cmake -DCMAKE_BUILD_TYPE=Release /path/to/klee/src
    to find LLVM.
 
 * `WARNINGS_AS_ERRORS` (BOOLEAN) - Treat warnings as errors when building KLEE.
+
+## Build
+**NOTE**: Download and build (with `-DLLVM_TARGETS_TO_BUILD=X86`) LLVM 8.0 from the [releases](https://releases.llvm.org/) page.
+```bash
+mkdir build
+cd build
+
+# Configure build with LLVM 8.0
+cmake -DENABLE_UNIT_TESTS=OFF -DENABLE_SYSTEM_TESTS=OFF -DENABLE_SOLVER_Z3=ON -DBUILD_SHARED_LIBS=OFF -DLLVM_CONFIG_BINARY="../../llvm-project/llvm/build/bin/llvm-config" -DLLVMCC="/usr/bin/clang-8" -DLLVMCXX="/usr/bin/clang++-8" ..
+
+# Build
+make -kj
+```
