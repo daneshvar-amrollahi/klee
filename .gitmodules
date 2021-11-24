@@ -1,0 +1,4 @@
+[submodule "examples/taint/openssl"]
+	path = examples/taint/openssl
+	url = https://github.com/ntauth/openssl.git
+	branch = 3.0.0-cmake
