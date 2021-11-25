@@ -8,8 +8,8 @@ KLEE_COMMAND=/usr/bin/time -v klee -allocate-determ -allocate-determ-start-addre
 							-solver-backend=z3 -exit-on-error -max-memory=750000 -search=dfs -condone-undeclared-havocs
 
 clean:
-		rm -Rf klee-*
-		rm -f *.bc
+	rm -Rf klee-*
+	rm -f *.bc
 
 verify:
 	$(CC) $(CFLAGS) $(INCLUDE_DIRS) $(SSL_TARGET).cpp -o $(SSL_TARGET).bc
