@@ -1,4 +1,4 @@
-CC=clang++-8
+CC?=clang++-8
 CFLAGS=-emit-llvm -O0 -DDIRECT -fno-exceptions -c
 INCLUDE_DIRS=-I . -I ../../../include/ -I ../openssl/build/include/
 
