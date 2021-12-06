@@ -179,6 +179,7 @@ public:
   HANDLER(handleGetTaint);
   HANDLER(handleSetPcTaint);
   HANDLER(handleGetPcTaint);
+  HANDLER(handleIgnoreTaint);
 #undef HANDLER
 };
 } // namespace klee

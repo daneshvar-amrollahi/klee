@@ -21,6 +21,7 @@ extern "C" {
   /* klee-taint interface */
   void         klee_set_taint(unsigned int taint, void* buffer, size_t size);
   unsigned int klee_get_taint(void* buffer, size_t size);
+  void         klee_ignore_taint(const char* filename, int line, int column);
 
   /* Add an accesible memory object at a user specified location. It
    * is the users responsibility to make sure that these memory
