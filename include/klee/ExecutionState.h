@@ -184,6 +184,16 @@ struct HavocInfo {
   const Array *value;
 };
 
+struct IgnoredTaintInfo {
+  const std::string file;
+  unsigned line;
+  unsigned column;
+
+public:
+  IgnoredTaintInfo(const std::string &_file, unsigned _line, unsigned _column)
+      : file(_file), line(_line), column(_column) {}
+};
+
 class ExecutionState;
 
 /// @brief LoopInProcess keeps all the necessary information for
@@ -378,6 +388,7 @@ public:
   unsigned int bpf_calls;
 
   TaintSet taint; // klee-taint lpc Program counter taint
+  std::vector<IgnoredTaintInfo> ignoredTaints;
 private:
   ExecutionState() : ptreeNode(0), bpf_calls(0), taint(0) {}
 

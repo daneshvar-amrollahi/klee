@@ -1741,4 +1741,6 @@ void SpecialFunctionHandler::handleIgnoreTaint(ExecutionState &state, KInstructi
   klee::ConstantExpr *CE1 = dyn_cast<klee::ConstantExpr>(arguments[1]);
   klee::ConstantExpr *CE2 = dyn_cast<klee::ConstantExpr>(arguments[2]);
   assert(CE1 && CE2 && "2nd and 3rd arguments should be integers");
+
+  state.ignoredTaints.push_back(IgnoredTaintInfo(filename, CE1->getZExtValue(), CE2->getZExtValue()));
 }
