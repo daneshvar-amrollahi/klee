@@ -389,6 +389,8 @@ public:
 
   TaintSet taint; // klee-taint lpc Program counter taint
   std::vector<IgnoredTaintInfo> ignoredTaints;
+  bool ignoreTaint(const InstructionInfo* info);
+
 private:
   ExecutionState() : ptreeNode(0), bpf_calls(0), taint(0) {}
 

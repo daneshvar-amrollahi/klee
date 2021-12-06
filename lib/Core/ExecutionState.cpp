@@ -1680,3 +1680,12 @@ void ExecutionState::dumpConstraints() const {
   //   std::cout <<*constraint <<std::endl;
   //}
 }
+
+bool ExecutionState::ignoreTaint(const InstructionInfo* info) {
+  for (auto ignored : ignoredTaints) {
+    if (ignored.file == info->file && ignored.line == info->line && ignored.column == info->column) {
+      return true;
+    }
+  }
+  return false;
+}
