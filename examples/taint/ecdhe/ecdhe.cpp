@@ -187,7 +187,7 @@ unsigned char* EC_DHE_deriveSecretKey(
     }
 
 	/* Create the buffer */
-	if ((ec_dhe->sharedSecret = (unsigned char*) OPENSSL_malloc(secret_len)) != nullptr) {
+	if ((ec_dhe->sharedSecret = (unsigned char*) OPENSSL_malloc(secret_len)) == nullptr) {
         EC_DHE_handleErrors("Could not create the sharedSecret buffer");
         return nullptr;
     }
