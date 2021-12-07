@@ -210,6 +210,18 @@ int main(int argc, char** argv)
    klee_set_taint(1, message->aria_settings->iv, EVP_MAX_IV_LENGTH);
    klee_set_taint(1, message->body, AriaDataSize);
 
+   // S-Box taints, by design
+   klee_ignore_taint("crypto/aria/aria.c", 497, 5);
+   klee_ignore_taint("crypto/aria/aria.c", 502, 9);
+   klee_ignore_taint("crypto/aria/aria.c", 506, 9);
+   klee_ignore_taint("crypto/aria/aria.c", 511, 23);
+   klee_ignore_taint("crypto/aria/aria.c", 516, 23);
+   klee_ignore_taint("crypto/aria/aria.c", 521, 23);
+   klee_ignore_taint("crypto/aria/aria.c", 526, 23);
+   klee_ignore_taint("crypto/aria/aria.c", 569, 5);
+   klee_ignore_taint("crypto/aria/aria.c", 601, 5);
+   klee_ignore_taint("crypto/aria/aria.c", 618, 5);
+
    // Encrypt & Decrypt
    enc_msg = ARIA_encrypt(message);
    dec_msg = ARIA_decrypt(enc_msg);

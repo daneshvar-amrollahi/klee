@@ -209,6 +209,18 @@ int main(int argc, char** argv)
    klee_set_taint(1, message->camellia_settings->iv, EVP_MAX_IV_LENGTH);
    klee_set_taint(1, message->body, CamelliaDataSize);
 
+   // S-Box taint, necessary for the algorithm itself
+   klee_ignore_taint("crypto/camellia/camellia.c", 309, 5);
+   klee_ignore_taint("crypto/camellia/camellia.c", 310, 5);
+   klee_ignore_taint("crypto/camellia/camellia.c", 313, 5);
+   klee_ignore_taint("crypto/camellia/camellia.c", 314, 5);
+   klee_ignore_taint("crypto/camellia/camellia.c", 418, 9);
+   klee_ignore_taint("crypto/camellia/camellia.c", 419, 9);
+   klee_ignore_taint("crypto/camellia/camellia.c", 420, 9);
+   klee_ignore_taint("crypto/camellia/camellia.c", 421, 9);
+   klee_ignore_taint("crypto/camellia/camellia.c", 422, 9);
+   klee_ignore_taint("crypto/camellia/camellia.c", 423, 9);
+
    // Encrypt & Decrypt
    enc_msg = CAMELLIA_encrypt(message);
    dec_msg = CAMELLIA_decrypt(enc_msg);
