@@ -1955,9 +1955,11 @@ void Executor::executeInstruction(ExecutionState &state, KInstruction *ki) {
         state.setPCTaint(state.getPCTaint() | eval(ki, 0, state).taint);
       }
 
-      if (eval(ki, 0, state).taint == TaintType::TaintSecret && !state.ignoreTaint(ki->info))
+      if (eval(ki, 0, state).taint == TaintType::TaintSecret && !state.ignoreTaint(ki->info)) {
         errs_once(ki) << "[!] Branch-based leakage detected\n\t - leak-amt: " << ki->total_accessed_offsets << " - " << *ki->inst << "\n\t" << "in '" << ki->info->file
-                      << "':" << ki->info->line << ":" << ki->info->column << "\n";
+                      << "':" << ki->info->line << ":" << ki->info->column << "; stack trace:\n";
+        state.dumpStack(outs());
+      }
 
       Executor::StatePair branches = fork(state, cond, false);
 
