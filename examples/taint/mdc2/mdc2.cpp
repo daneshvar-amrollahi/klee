@@ -1,6 +1,6 @@
 /**
  *  @author Solal Pirelli (based on Ayoub Chouak's MD5 harness)
- *  @brief  Harness for MD2 leakage analysis
+ *  @brief  Harness for MDC2 leakage analysis
  */
 
 #include <stdio.h>
@@ -13,18 +13,18 @@
 #include <openssl/evp.h>
 #include <openssl/rand.h>
 #include <openssl/err.h>
-#include <openssl/md2.h>
+#include <openssl/mdc2.h>
 
 #include <klee/klee.h>
 
 constexpr size_t DataSize = 64;
 
-static int MD2_digest(unsigned char* in, size_t len, unsigned char out[MD2_DIGEST_LENGTH])
+static int MDC2_digest(unsigned char* in, size_t len, unsigned char out[MDC2_DIGEST_LENGTH])
 {
    unsigned int digest_length;
 
    EVP_MD_CTX* ctx = EVP_MD_CTX_new();
-   EVP_DigestInit_ex(ctx, EVP_md2(), nullptr);
+   EVP_DigestInit_ex(ctx, EVP_mdc2(), nullptr);
 
    if (!EVP_DigestUpdate(ctx, in, len)) {
      return -1;
@@ -56,7 +56,7 @@ int main(int argc, char** argv)
 
    // Allocate data
    unsigned char* data = new unsigned char[DataSize];
-   unsigned char digest[MD2_DIGEST_LENGTH];
+   unsigned char digest[MDC2_DIGEST_LENGTH];
 
    // Make symbolic data
    klee_make_symbolic(data, DataSize, "data");
@@ -65,7 +65,7 @@ int main(int argc, char** argv)
    klee_set_taint(1, data, DataSize);
 
    // Digest
-   assert(MD2_digest(data, DataSize, digest) > 0);
+   assert(MDC2_digest(data, DataSize, digest) > 0);
 
    return 0;
 }
