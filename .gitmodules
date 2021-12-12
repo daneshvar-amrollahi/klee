@@ -2,3 +2,6 @@
 	path = examples/taint/openssl
 	url = git@github.com:rishabh246/openssl.git
 	branch = 3.0.0-cmake
+[submodule "examples/taint/sec16almeida/verifying-constant-time"]
+	path = examples/taint/sec16almeida/verifying-constant-time
+	url = https://github.com/imdea-software/verifying-constant-time
