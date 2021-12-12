@@ -38,7 +38,6 @@ int main()
   uint32_t sub_len = klee_range(0, MAX_LEN, "sub_len");
 
   klee_set_taint(1, &l_idx, sizeof(l_idx));
-  klee_set_taint(1, &sub_len, sizeof(sub_len));
 
   cp_copy_subarray(out, in, sizeof(in), l_idx, sub_len);
 

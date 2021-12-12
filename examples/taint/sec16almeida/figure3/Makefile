@@ -1,3 +1,3 @@
 KLEE_LIB_ARGS=
 include ../../Makefile
-SSL_TARGET=figure2
+SSL_TARGET=figure3
