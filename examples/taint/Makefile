@@ -1,8 +1,16 @@
 # Get current dir, see https://stackoverflow.com/a/8080530
 SELF_DIR := $(abspath $(dir $(lastword $(MAKEFILE_LIST))))
 
-CC?=clang++-8
-CFLAGS=-emit-llvm -O0 -DDIRECT -fno-exceptions -c
+SUFFIX=.cpp
+
+ifeq ($(IS_C),1)
+# clang++ -> clang no matter the version
+OLD_CC:=$(CC)
+CC=$(subst ++,,$(OLD_CC))
+SUFFIX=.c
+endif
+
+CFLAGS+=-emit-llvm -O0 -DDIRECT -fno-exceptions -c
 INCLUDE_DIRS=-I . -I $(SELF_DIR)/../../include/ -I $(SELF_DIR)/openssl/build/include/ -isystem $(SELF_DIR)/sec16almeida
 
 KLEE_LIB_ARGS?=--libc=uclibc --posix-runtime -link-llvm-lib=$(SELF_DIR)/openssl/build/crypto/libcrypto.bc
@@ -18,5 +26,5 @@ clean:
 	rm -f *.bc
 
 verify:
-	$(CC) $(CFLAGS) $(INCLUDE_DIRS) $(SSL_TARGET).cpp -o $(SSL_TARGET).bc
+	$(CC) $(CFLAGS) $(INCLUDE_DIRS) $(SSL_TARGET)$(SUFFIX) -o $(SSL_TARGET).bc
 	$(KLEE_COMMAND) $(SSL_TARGET).bc
