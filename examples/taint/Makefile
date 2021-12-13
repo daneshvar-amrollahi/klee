@@ -11,7 +11,7 @@ SUFFIX=.c
 endif
 
 CFLAGS+=-emit-llvm -O0 -DDIRECT -fno-exceptions -c
-INCLUDE_DIRS=-I . -I $(SELF_DIR)/../../include/ -I $(SELF_DIR)/openssl/build/include/ -isystem $(SELF_DIR)/sec16almeida
+INCLUDE_DIRS+=-I . -I $(SELF_DIR)/../../include/ -I $(SELF_DIR)/openssl/build/include/ -isystem $(SELF_DIR)/sec16almeida
 
 KLEE_LIB_ARGS?=--libc=uclibc --posix-runtime -link-llvm-lib=$(SELF_DIR)/openssl/build/crypto/libcrypto.bc
 
