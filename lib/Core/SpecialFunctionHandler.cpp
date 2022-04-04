@@ -174,6 +174,7 @@ static SpecialFunctionHandler::HandlerInfo handlerInfo[] = {
   add("klee_get_taint", handleGetTaint, true),
   add("klee_set_pc_taint", handleSetPcTaint, false),
   add("klee_get_pc_taint", handleGetPcTaint, true),
+  add("klee_ignore_taint", handleIgnoreTaint, false),
 
   // operator delete[](void*)
   add("_ZdaPv", handleDeleteArray, false),
@@ -1729,4 +1730,17 @@ void SpecialFunctionHandler::handleSetPcTaint(ExecutionState &state,
   //if (state.taint != taint_param)
   //  klee_warning("Tainted condition PC retainted from 0x%08x to 0x%08x", state.taint, taint_param);
   state.setPCTaint(taint_param);
+}
+
+/* void klee_ignore_taint(const char* filename, int line, int column); */
+void SpecialFunctionHandler::handleIgnoreTaint(ExecutionState &state, KInstruction *target, std::vector<ref<Expr> > &arguments) {
+  assert(arguments.size() == 3 && "invalid number of arguments to klee_ignore_taint");
+
+  std::string filename = readStringAtAddress(state, arguments[0]);
+
+  klee::ConstantExpr *CE1 = dyn_cast<klee::ConstantExpr>(arguments[1]);
+  klee::ConstantExpr *CE2 = dyn_cast<klee::ConstantExpr>(arguments[2]);
+  assert(CE1 && CE2 && "2nd and 3rd arguments should be integers");
+
+  state.ignoredTaints.push_back(IgnoredTaintInfo(filename, CE1->getZExtValue(), CE2->getZExtValue()));
 }

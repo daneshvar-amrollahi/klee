@@ -154,7 +154,8 @@ ExecutionState::ExecutionState(const ExecutionState &state)
       condoneUndeclaredHavocs(state.condoneUndeclaredHavocs),
       bpf_calls(state.bpf_calls),
 
-      taint(state.taint)
+      taint(state.taint),
+      ignoredTaints(state.ignoredTaints)
 {
   for (unsigned int i=0; i<symbolics.size(); i++)
     symbolics[i].first->refCount++;
@@ -1678,4 +1679,13 @@ void ExecutionState::dumpConstraints() const {
   //   const ref<Expr> constraint = *ci;
   //   std::cout <<*constraint <<std::endl;
   //}
+}
+
+bool ExecutionState::ignoreTaint(const InstructionInfo* info) {
+  for (auto ignored : ignoredTaints) {
+    if (ignored.file == info->file && ignored.line == info->line && ignored.column == info->column) {
+      return true;
+    }
+  }
+  return false;
 }
