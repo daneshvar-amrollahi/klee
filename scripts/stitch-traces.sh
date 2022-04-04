@@ -21,14 +21,14 @@ function stitch_traces {
     touch $TRACES_DIR/stateful-error-log   
     rm $TRACES_DIR/stateful-error-log
     parallel --joblog joblog.txt -j$(nproc) --halt-on-error 0 "set -euo pipefail; $SCRIPT_DIR/../build/bin/stitch-perf-contract \
-                  -contract $SCRIPT_DIR/../../bolt/perf-contracts/perf-contracts.so \
+                  -contract $SCRIPT_DIR/../../pix/dpdk-nfs/perf-contracts/perf-contracts.so \
                   --user-vars \"$USER_VAR_STR\" \
                   {} 2>> $TRACES_DIR/stateful-error-log \
                 | awk \"{ print \\\"\$(basename {} .call_path),\\\" \\\$0; }\"" \
                 ::: $TRACES_DIR/*.call_path > $TRACES_DIR/stateful-analysis-log.txt
   else
     parallel --joblog joblog.txt -j$(nproc) --halt-on-error 0 "set -euo pipefail; $SCRIPT_DIR/../build/bin/stitch-perf-contract \
-                  -contract $SCRIPT_DIR/../../bolt/perf-contracts/perf-contracts.so \
+                  -contract $SCRIPT_DIR/../../pix/dpdk-nfs/perf-contracts/perf-contracts.so \
                   {} 2>> $TRACES_DIR/stateful-error-log \
                 | awk \"{ print \\\"\$(basename {} .call_path),\\\" \\\$0; }\"" \
                 ::: $TRACES_DIR/*.call_path > $TRACES_DIR/stateful-analysis-log.txt
