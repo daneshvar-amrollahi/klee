@@ -26,7 +26,7 @@ For further information, see the [webpage](http://klee.github.io/).
 ## Leakage Analysis
 From the *examples/taint* directory:
 ```bash
-git clone https://github.com/ntauth/openssl.git
+git clone https://github.com/rishabh246/openssl.git
 cd openssl
 git checkout 3.0.0-cmake
 ```
