@@ -30,7 +30,9 @@ git clone https://github.com/rishabh246/openssl.git
 cd openssl
 git checkout 3.0.0-cmake
 ```
-To run an example from the *examples/taint* directory:
+Then follow the instructions in the [NOTES-CMAKE.md](https://github.com/rishabh246/openssl/blob/3.0.0-cmake/NOTES-CMAKE.mdhttps://github.com/rishabh246/openssl/blob/3.0.0-cmake/NOTES-CMAKE.md) file to generate LLVM bitcode for `libssl`. 
+
+Finally, to an example from the *examples/taint* directory (here aes):
 ```bash
 cd aes
 make       # Run leakage analysis
