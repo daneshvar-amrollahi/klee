@@ -35,6 +35,6 @@ Then follow the instructions in the [NOTES-CMAKE.md](https://github.com/rishabh2
 Finally, to an example from the *examples/taint* directory (here aes):
 ```bash
 cd aes
-make       # Run leakage analysis
+make verify      # Run leakage analysis
 make clean # Clean analysis artifacts
 ```
