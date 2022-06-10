@@ -6,6 +6,8 @@ KLEE_DIR=$(shell dirname $$(which klee))/../..
 
 SUFFIX=.cpp
 
+CC=clang
+
 ifeq ($(IS_C),1)
 # clang++ -> clang no matter the version
 OLD_CC:=$(CC)
@@ -23,7 +25,6 @@ KLEE_COMMAND=/usr/bin/time -v klee -allocate-determ -allocate-determ-start-addre
 							-taint=direct $(KLEE_LIB_ARGS) \
 							-solver-backend=z3 -exit-on-error -max-memory=750000 -search=dfs -condone-undeclared-havocs \
                                                         -dump-call-trace-instructions -call-trace-instr-startfn=main -call-trace-instr-endfn=main \
-#                                                        -const-array-opt=true -optimize-array=all
 
 clean:
 	rm -Rf klee-*
@@ -35,9 +36,6 @@ verify:
 
 SHELL=/bin/bash
 contract:
-#	cd $(KLEE_DIR)/../bolt/perf-contracts && make clean && make LLVM=TRUE KLEE_INCLUDE=$(KLEE_DIR)/include
-#	cd klee-last && $(KLEE_DIR)/scripts/process-traces.sh . verify-dpdk llvm Num_bucket_traversals 1 Num_hash_collisions 0  expired_flows 0
-#	export KLEE_INCLUDE=$(KLEE_DIR)/include ; $(KLEE_DIR)/scripts/tree-gen/build_trees.sh -m 1000 -n 0 -e llvm
 	$(KLEE_DIR)/scripts/stateless_perf.sh klee-last combined_perf.txt main llvm
 	cp klee-last/combined_perf.txt klee-last/perf-formula.txt
 	export KLEE_INCLUDE=$(KLEE_DIR)/include ; $(KLEE_DIR)/scripts/tree-gen/build_trees.sh -m 1000 -n 0
