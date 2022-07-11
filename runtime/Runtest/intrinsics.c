@@ -378,3 +378,5 @@ void klee_forbid_access(void *ptr, int width, char *message) {}
 void klee_allow_access(void *ptr, int width) {}
 
 void klee_dump_constraints() {}
+
+void klee_daneshvar() {}

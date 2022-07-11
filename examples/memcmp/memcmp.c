@@ -4,8 +4,12 @@ int match(int *a, int* b, int n)
 {
         int i = 0;
         while (a[i] == b[i] && i < n)
+	{
+		klee_daneshvar();
                 i++;
-        return i;
+	}
+
+return i;
 }
 
 int main() {
@@ -14,6 +18,12 @@ int main() {
         klee_assume(n >= 0);
         klee_assume(n <= 5);
 
+        for (int i = 0; i <= 5; i++){
+                if(i == n){
+                        n = i;
+                        break;
+                }
+        }
         int a[10];
         klee_make_symbolic(a, sizeof (a), "a");
 

@@ -31,6 +31,8 @@
 #include <errno.h>
 #include <sstream>
 
+#include <stdlib.h>
+
 using namespace llvm;
 using namespace klee;
 
@@ -169,6 +171,7 @@ static SpecialFunctionHandler::HandlerInfo handlerInfo[] = {
   add("klee_possibly_havoc", handlePossiblyHavoc, false),
   add("klee_map_symbol_names", handleMapSymbolNames, false),
   add("klee_add_bpf_call", handleAddBPFCall, false),
+  add("klee_daneshvar", handleDaneshvar, false),
 
   // operator delete[](void*)
   add("_ZdaPv", handleDeleteArray, false),
@@ -1628,4 +1631,10 @@ void SpecialFunctionHandler::handleAddBPFCall(ExecutionState &state,
                                                  std::vector<ref<Expr> > &arguments) {
   /* Terrible HACK. This has to go */
   state.bpf_calls++;                                      
+}
+
+void SpecialFunctionHandler::handleDaneshvar(ExecutionState &state,
+                                                 KInstruction *target,
+                                                 std::vector<ref<Expr> > &arguments) {
+  printf("Hello Daneshvar\n");
 }

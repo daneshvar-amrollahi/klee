@@ -289,6 +289,9 @@ void klee_map_symbol_names(char* symbol_name, int occurence, void*key, int width
 
 void klee_add_bpf_call();
 
+// New special functions
+void klee_daneshvar();
+
 #define PERF_MODEL_BRANCH(param, val1, val2)                                   \
   if (param) {                                                                 \
     param = val1;                                                              \

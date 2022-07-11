@@ -174,6 +174,7 @@ public:
   HANDLER(handlePossiblyHavoc);
   HANDLER(handleMapSymbolNames);
   HANDLER(handleAddBPFCall);
+  HANDLER(handleDaneshvar);
 #undef HANDLER
 };
 } // namespace klee
