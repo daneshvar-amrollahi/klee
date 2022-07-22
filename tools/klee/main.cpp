@@ -2121,6 +2121,10 @@ static const char *modelledExternals[] = {
 
     "klee_daneshvar"
 
+    "klee_quantify"
+
+    "klee_memcmp"
+
     /* tracing functions end */
 
     "llvm.dbg.declare", "llvm.dbg.value", "llvm.va_start", "llvm.va_end",

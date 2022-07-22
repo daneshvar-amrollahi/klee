@@ -32,9 +32,12 @@
 #include <sstream>
 
 #include <stdlib.h>
+#include "klee/util/ExprPPrinter.h"
 
 using namespace llvm;
 using namespace klee;
+
+#define MAX_ARR_SIZE 100000 + 10
 
 namespace {
 cl::opt<bool>
@@ -172,6 +175,8 @@ static SpecialFunctionHandler::HandlerInfo handlerInfo[] = {
   add("klee_map_symbol_names", handleMapSymbolNames, false),
   add("klee_add_bpf_call", handleAddBPFCall, false),
   add("klee_daneshvar", handleDaneshvar, false),
+  add("klee_quantify", handleQuantify, false),
+  add("klee_memcmp", handleMemcmp, false),
 
   // operator delete[](void*)
   add("_ZdaPv", handleDeleteArray, false),
@@ -1638,3 +1643,79 @@ void SpecialFunctionHandler::handleDaneshvar(ExecutionState &state,
                                                  std::vector<ref<Expr> > &arguments) {
   printf("Hello Daneshvar\n");
 }
+
+void SpecialFunctionHandler::handleQuantify(ExecutionState &state,
+                                                 KInstruction *target,
+                                                 std::vector<ref<Expr> > &arguments) {
+
+  printf("Hello Quantify\n");
+
+  assert(arguments.size()==1 && "invalid number of arguments to klee_quantify");
+
+  ref<Expr> condition = arguments[0];
+  
+  if (condition->getWidth() != Expr::Bool)
+    condition = NeExpr::create(condition, ConstantExpr::create(0, condition->getWidth()));
+
+  llvm::raw_ostream &output = llvm::outs();
+  ExprPPrinter::printOne(output, "  Condition", condition);
+}
+
+
+void SpecialFunctionHandler::handleMemcmp(ExecutionState &state,
+                                                 KInstruction *target,
+                                                 std::vector<ref<Expr> > &arguments) {
+  if (arguments.size() != 6) {
+    executor.terminateStateOnError
+      (state, "Incorrect number of arguments to klee_memcmp",
+       Executor::User);
+  }
+
+  ref<Expr> forall_quantified_var = arguments[0];
+  ref<Expr> exists_quantified_var = arguments[1];
+  ref<Expr> a = arguments[2];
+  ref<Expr> b = arguments[3];
+  ref<Expr> n = arguments[4];
+  ref<Expr> i = arguments[5];
+  int sz = cast<ConstantExpr>(n)->getZExtValue();
+
+  llvm::raw_ostream &output = llvm::outs();
+
+  ObjectPair op_a;
+  ref<klee::ConstantExpr> address_a = cast<klee::ConstantExpr>(a);
+  bool success = state.addressSpace.resolveOne(address_a, op_a);
+  assert(success && "resolveOne failed");
+  const ObjectState *os_a = op_a.second;
+
+  ObjectPair op_b;
+  ref<klee::ConstantExpr> address_b = cast<klee::ConstantExpr>(b);
+  success = state.addressSpace.resolveOne(address_b, op_b);
+  assert(success && "resolveOne failed");
+  const ObjectState *os_b = op_b.second;
+
+  
+  ref<Expr> jgeq0 = SgeExpr::create(forall_quantified_var, ConstantExpr::create(0, Expr::Int32));
+  ref<Expr> jleqn = SleExpr::create(forall_quantified_var, n);
+  ref<Expr> aj = os_a->read(forall_quantified_var, Expr::Int8);
+  ref<Expr> bj = os_b->read(forall_quantified_var, Expr::Int8); 
+  ref<Expr> forall_body = ImpliesExpr::create(AndExpr::create(jgeq0, jleqn), EqExpr::create(aj, bj));
+  ref<Expr> forall_expr = ForallExpr::create("fv", forall_quantified_var, forall_body);
+  // ExprPPrinter::printOne(output, "  forall_expr = ", forall_expr);
+  ref<Expr> c1 = ImpliesExpr::create(EqExpr::create(i, ConstantExpr::create(0, i->getWidth())), forall_expr);
+  //i = 0 ==> (∀j: 0 <= j < n ==> a[j] = b[j])
+
+
+  ref<Expr> kgeq0 = SgeExpr::create(exists_quantified_var, ConstantExpr::create(0, Expr::Int32));
+  ref<Expr> kleqn = SleExpr::create(exists_quantified_var, n);
+  ref<Expr> ak = os_a->read(exists_quantified_var, Expr::Int8);
+  ref<Expr> bk = os_b->read(exists_quantified_var, Expr::Int8);
+  ref<Expr> exists_body = AndExpr::create(AndExpr::create(kgeq0, kleqn), NeExpr::create(ak, bk));
+  ref<Expr> exists_expr = ExistsExpr::create("ev", exists_quantified_var, exists_body);
+  // ExprPPrinter::printOne(output, "  exists_expr = ", exists_expr);
+  ref<Expr> c2 = ImpliesExpr::create(EqExpr::create(i, ConstantExpr::create(1, i->getWidth())), exists_expr);
+  //i = 1 ==> (∃j: 0 <= j < n ==> a[j] != b[j])
+
+  executor.addConstraint(state, c1);
+  executor.addConstraint(state, c2);
+}
+
