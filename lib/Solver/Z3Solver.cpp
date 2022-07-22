@@ -241,7 +241,7 @@ bool Z3SolverImpl::computeInitialValues(
   return internalRunSolver(query, &objects, &values, hasSolution);
 }
 
-bool Z3SolverImpl::internalRunSolver(
+bool Z3SolverImpl::internalRunSolver( 
     const Query &query, const std::vector<const Array *> *objects,
     std::vector<std::vector<unsigned char> > *values, bool &hasSolution) {
 
