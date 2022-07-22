@@ -19,6 +19,8 @@
 #include "llvm/ADT/StringExtras.h"
 #include "llvm/Support/CommandLine.h"
 
+#define MAX_BOUND_VARS 100
+
 using namespace klee;
 
 namespace {
@@ -89,7 +91,7 @@ Z3Builder::Z3Builder(bool autoClearConstructCache, const char* z3LogInteractionF
   Z3_config cfg = Z3_mk_config();
   // It is very important that we ask Z3 to let us manage memory so that
   // we are able to cache expressions and sorts.
-  ctx = Z3_mk_context_rc(cfg);
+  ctx = Z3_mk_context(cfg); //Previously was Z3_mk_context_rc(cfg)
   // Make sure we handle any errors reported by Z3.
   Z3_set_error_handler(ctx, custom_z3_error_handler);
   // When emitting Z3 expressions make them SMT-LIBv2 compliant
@@ -448,6 +450,29 @@ Z3ASTHandle Z3Builder::getArrayForUpdate(const Array *root,
     return (un_expr);
   }
 }
+
+
+Z3ASTHandle Z3Builder::forallExpr(unsigned int weight, unsigned int num_bound_vars, Z3_ast body, Z3_app bound_vars[]) { 
+  Z3_ast axiom = Z3_mk_forall_const(ctx, weight, num_bound_vars, bound_vars, 0, 0, body);
+  return Z3ASTHandle(axiom, ctx);
+}
+
+Z3ASTHandle Z3Builder::existsExpr(unsigned int weight, unsigned int num_bound_vars, Z3_ast body, Z3_app bound_vars[]) { 
+  Z3_ast axiom = Z3_mk_exists_const(ctx, weight, num_bound_vars, bound_vars, 0, 0, body);
+  return Z3ASTHandle(axiom, ctx);
+}
+
+Z3ASTHandle Z3Builder::impliesExpr(Z3ASTHandle lhs, Z3ASTHandle rhs) {
+  Z3_ast axiom = Z3ASTHandle(Z3_mk_implies(ctx, lhs, rhs), ctx);
+  return Z3ASTHandle(axiom, ctx);
+}
+
+Z3_ast mk_var(Z3_context ctx, const char * name, Z3_sort ty)
+{
+    Z3_symbol   s  = Z3_mk_string_symbol(ctx, name);
+    return Z3_mk_const(ctx, s, ty);
+}
+
 
 /** if *width_out!=1 then result is a bitvector,
     otherwise it is a bool */
@@ -842,6 +867,40 @@ Z3ASTHandle Z3Builder::constructActual(ref<Expr> e, int *width_out) {
     assert(*width_out != 1 && "uncanonicalized sle");
     *width_out = 1;
     return sbvLeExpr(left, right);
+  }
+
+  // Quantified
+  case Expr::Forall: {
+    ForallExpr *fe = cast<ForallExpr>(e);
+    *width_out = 1;
+    Z3_ast body = construct(fe->body, width_out);
+    Z3_sort I = Z3_mk_int_sort(ctx);                      
+    Z3_ast bound_var = mk_var(ctx, fe->bound_var.c_str(), I);
+    Z3_app bound_vars[MAX_BOUND_VARS];
+    bound_vars[0] = {(Z3_app) bound_var};
+    int num_bound_vars = 1;
+    int weight = 0;
+    return forallExpr(weight, num_bound_vars, body, bound_vars);    
+  }
+
+  case Expr::Exists: {
+    ExistsExpr *ee = cast<ExistsExpr>(e);
+    *width_out = 1;
+    Z3_ast body = construct(ee->body, width_out);
+    Z3_sort I = Z3_mk_int_sort(ctx);
+    Z3_ast bound_var = mk_var(ctx, ee->bound_var.c_str(), I);
+    Z3_app bound_vars[MAX_BOUND_VARS];
+    bound_vars[0] = {(Z3_app) bound_var};
+    int num_bound_vars = 1;
+    int weight = 0;
+    return existsExpr(weight, num_bound_vars, body, bound_vars);
+  }
+
+  case Expr::Implies: {
+    ImpliesExpr *ie = cast<ImpliesExpr>(e);
+    Z3ASTHandle left = construct(ie->left, width_out);
+    Z3ASTHandle right = construct(ie->right, width_out);
+    return impliesExpr(left, right); 
   }
 
 // unused due to canonicalization

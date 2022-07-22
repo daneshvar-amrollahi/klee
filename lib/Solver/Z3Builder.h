@@ -165,6 +165,13 @@ private:
 
   Z3SortHandle getBvSort(unsigned width);
   Z3SortHandle getArraySort(Z3SortHandle domainSort, Z3SortHandle rangeSort);
+  
+  
+  // Quantified formulas
+  Z3ASTHandle forallExpr(unsigned int weight, unsigned int num_bound_vars, Z3_ast body, Z3_app bound_vars[]);
+  Z3ASTHandle existsExpr(unsigned int weight, unsigned int num_bound_vars, Z3_ast body, Z3_app bound_vars[]);
+  Z3ASTHandle impliesExpr(Z3ASTHandle lhs, Z3ASTHandle rhs);
+  
   bool autoClearConstructCache;
   std::string z3LogInteractionFile;
 
@@ -179,7 +186,7 @@ public:
   Z3ASTHandle getFalse();
   Z3ASTHandle getInitialRead(const Array *os, unsigned index);
 
-  Z3ASTHandle construct(ref<Expr> e) {
+  Z3ASTHandle construct(ref<Expr> e) {    
     Z3ASTHandle res = construct(e, 0);
     if (autoClearConstructCache)
       clearConstructCache();
