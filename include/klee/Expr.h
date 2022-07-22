@@ -25,6 +25,8 @@
 #include <vector>
 #include <map>
 
+#define MAX_BOUND_VARS 100
+
 namespace llvm {
   class Type;
   class raw_ostream;
@@ -171,7 +173,14 @@ public:
     BinaryKindFirst=Add,
     BinaryKindLast=Sge,
     CmpKindFirst=Eq,
-    CmpKindLast=Sge
+    CmpKindLast=Sge,
+
+    // Quantified
+    Forall,
+    Exists,
+
+    //Implied
+    Implies,
   };
 
   unsigned refCount;
@@ -947,6 +956,7 @@ ARITHMETIC_EXPR_CLASS(Xor)
 ARITHMETIC_EXPR_CLASS(Shl)
 ARITHMETIC_EXPR_CLASS(LShr)
 ARITHMETIC_EXPR_CLASS(AShr)
+ARITHMETIC_EXPR_CLASS(Implies) //This is also sort of a binary expr, because it has l and r
 
 // Comparison Exprs
 
@@ -992,6 +1002,111 @@ COMPARISON_EXPR_CLASS(Slt)
 COMPARISON_EXPR_CLASS(Sle)
 COMPARISON_EXPR_CLASS(Sgt)
 COMPARISON_EXPR_CLASS(Sge)
+
+// Quantified Exprs
+
+class QuantifiedExpr : public NonConstantExpr {
+  public:
+    static const unsigned numKids = 2;    //should check where this is used (printing?)
+    std::string bound_var;                //the name of the variable that is quantified over
+    ref<Expr> var;                        //the variable that is quantified over
+    ref<Expr> body;                       //the body of the quantifier
+  protected:
+    QuantifiedExpr(const std::string &bound_var, const ref<Expr> &var, const ref<Expr> &body)
+        : bound_var(bound_var), var(var), body(body) {}
+
+};
+
+
+class ForallExpr : public QuantifiedExpr {
+  public:
+    static const Kind kind = Forall;
+
+    ForallExpr(const std::string &bound_var, const ref<Expr> &var, const ref<Expr> &body)
+        : QuantifiedExpr(bound_var, var, body) {}
+
+
+    static ref<Expr> alloc(const std::string &bound_var, const ref<Expr> &var, const ref<Expr> &body) {
+      ref<Expr> res(new ForallExpr(bound_var, var, body));
+      // res->computeHash();
+      return res;
+    }
+
+    static ref<Expr> create(const std::string &bound_var, const ref<Expr> &var, const ref<Expr> &body) {
+      return alloc(bound_var, var, body);
+    }
+
+
+    int compareContents(const Expr &b) const {
+      return 0;
+    }
+
+    Kind getKind() const { return kind; }
+
+    Width getWidth() const { return NULL; }
+
+    unsigned getNumKids() const { return numKids; }
+
+    ref<Expr> getKid(unsigned i) const { 
+      if (i == 0) {
+        return var;
+      } else if (i == 1) {
+        return body;
+      } else {
+        assert(0 && "invalid index");
+        return NULL;
+      }
+    }
+
+    ref<Expr> rebuild(ref<Expr> kids[]) const {
+      return NULL;
+    }
+};
+
+class ExistsExpr : public QuantifiedExpr {
+  public:
+    static const Kind kind = Exists;
+
+    ExistsExpr(const std::string &bound_var, const ref<Expr> &var, const ref<Expr> &body)
+        : QuantifiedExpr(bound_var, var, body) {}
+
+    static ref<Expr> alloc(const std::string &bound_var, const ref<Expr> &var, const ref<Expr> &body) {
+      ref<Expr> res(new ExistsExpr(bound_var, var, body));
+      // res->computeHash();
+      return res;
+    }
+
+    static ref<Expr> create(const std::string &bound_var, const ref<Expr> &var, const ref<Expr> &body) {
+      return alloc(bound_var, var, body);
+    }
+
+
+    int compareContents(const Expr &b) const {
+      return 0;
+    }
+
+    Kind getKind() const { return kind; }
+
+    Width getWidth() const { return NULL; }
+
+    unsigned getNumKids() const { return numKids; }
+
+    ref<Expr> getKid(unsigned i) const { 
+      if (i == 0) {
+        return var;
+      } else if (i == 1) {
+        return body;
+      } else {
+        assert(0 && "invalid index");
+        return NULL;
+      }
+    }
+
+    ref<Expr> rebuild(ref<Expr> kids[]) const {
+      return NULL;
+    }
+};
+
 
 // Terminal Exprs
 

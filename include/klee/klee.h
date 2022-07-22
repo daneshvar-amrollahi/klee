@@ -14,6 +14,7 @@
 #include "stddef.h"
 #include <assert.h>
 
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -291,6 +292,8 @@ void klee_add_bpf_call();
 
 // New special functions
 void klee_daneshvar();
+void klee_quantify(uintptr_t condition);
+void klee_memcmp(int forall_quantified_var, int exists_quantified_var, int *a, int *b, int n, int i);
 
 #define PERF_MODEL_BRANCH(param, val1, val2)                                   \
   if (param) {                                                                 \
