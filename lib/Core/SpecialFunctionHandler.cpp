@@ -1695,7 +1695,7 @@ void SpecialFunctionHandler::handleMemcmp(ExecutionState &state,
 
   
   ref<Expr> jgeq0 = SgeExpr::create(forall_quantified_var, ConstantExpr::create(0, Expr::Int32));
-  ref<Expr> jleqn = SleExpr::create(forall_quantified_var, n);
+  ref<Expr> jleqn = SltExpr::create(forall_quantified_var, n);
   ref<Expr> aj = os_a->read(forall_quantified_var, Expr::Int8);
   ref<Expr> bj = os_b->read(forall_quantified_var, Expr::Int8); 
   ref<Expr> forall_body = ImpliesExpr::create(AndExpr::create(jgeq0, jleqn), EqExpr::create(aj, bj));
@@ -1706,7 +1706,7 @@ void SpecialFunctionHandler::handleMemcmp(ExecutionState &state,
 
 
   ref<Expr> kgeq0 = SgeExpr::create(exists_quantified_var, ConstantExpr::create(0, Expr::Int32));
-  ref<Expr> kleqn = SleExpr::create(exists_quantified_var, n);
+  ref<Expr> kleqn = SltExpr::create(exists_quantified_var, n);
   ref<Expr> ak = os_a->read(exists_quantified_var, Expr::Int8);
   ref<Expr> bk = os_b->read(exists_quantified_var, Expr::Int8);
   ref<Expr> exists_body = AndExpr::create(AndExpr::create(kgeq0, kleqn), NeExpr::create(ak, bk));
