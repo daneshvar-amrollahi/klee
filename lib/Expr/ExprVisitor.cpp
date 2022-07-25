@@ -56,21 +56,6 @@ ref<Expr> ExprVisitor::visitActual(const ref<Expr> &e) {
     }
 
 
-    if (ep.getKind() == Expr::Forall) // this is not probably a good idea
-    {
-      return NULL;
-    }
-    if (ep.getKind() == Expr::Exists) // this is not probably a good idea
-    {
-      return NULL;
-    }
-    {
-      return NULL;
-    }
-    if (ep.getKind() == Expr::Implies) // this is not probably a good idea
-    {
-      return NULL;
-    }
     
 
     switch(ep.getKind()) {
@@ -106,7 +91,6 @@ ref<Expr> ExprVisitor::visitActual(const ref<Expr> &e) {
     case Expr::Sgt: res = visitSgt(static_cast<SgtExpr&>(ep)); break;
     case Expr::Sge: res = visitSge(static_cast<SgeExpr&>(ep)); break;
     case Expr::Constant:
-    case Expr::Forall:
     default:
       assert(0 && "invalid expression kind");
     }
