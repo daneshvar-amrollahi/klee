@@ -1059,7 +1059,7 @@ class ForallExpr : public QuantifiedExpr {
     }
 
     ref<Expr> rebuild(ref<Expr> kids[]) const {
-      return NULL;
+      return create(bound_var, kids[0], kids[1]);
     }
 };
 
@@ -1103,7 +1103,7 @@ class ExistsExpr : public QuantifiedExpr {
     }
 
     ref<Expr> rebuild(ref<Expr> kids[]) const {
-      return NULL;
+      return create(bound_var, kids[0], kids[1]);
     }
 };
 
