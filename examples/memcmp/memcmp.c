@@ -8,12 +8,14 @@ int match(int *a, int* b, int n)
         int forall_quantified_var, exists_quantified_var;
         klee_make_symbolic(&forall_quantified_var, sizeof(forall_quantified_var), "fqv");
         klee_make_symbolic(&exists_quantified_var, sizeof(exists_quantified_var), "eqv");
-
+        klee_assume(forall_quantified_var < n);
+        klee_assume(forall_quantified_var >= 0);
+        klee_assume(exists_quantified_var < n);
+        klee_assume(exists_quantified_var >= 0);
+        klee_assume(i == 0 || i == 1);
         klee_memcmp(forall_quantified_var, exists_quantified_var, a, b, n, i);
         return i;
 }
-
-
 
 // int match(int *a, int* b, int n) 
 // {
@@ -28,11 +30,11 @@ int match(int *a, int* b, int n)
 
 
 int main() {
-        int a[10];
-        klee_make_symbolic(a, sizeof (a), "a");
+        int a[5], b[5];
+        klee_make_symbolic(a, sizeof(a), "a");
+        klee_make_symbolic(b, sizeof(b), "b");
 
-        int b[10];
-        klee_make_symbolic(b, sizeof (b), "b");
-
-        match(a, b, 10);
+        if (!match(a, b, 5)) 
+                if(a[0] != b[0])
+                        klee_daneshvar();
 }
