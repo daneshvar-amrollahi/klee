@@ -400,7 +400,6 @@ Z3ASTHandle Z3Builder::getInitialArray(const Array *root) {
                                ? (32 - uid_length)
                                : root->name.length();
     std::string unique_name = root->name.substr(0, space) + unique_id;
-
     array_expr = buildArray(unique_name.c_str(), root->getDomain(),
                             root->getRange());
 
@@ -463,7 +462,7 @@ Z3ASTHandle Z3Builder::existsExpr(unsigned int weight, unsigned int num_bound_va
 }
 
 Z3ASTHandle Z3Builder::impliesExpr(Z3ASTHandle lhs, Z3ASTHandle rhs) {
-  Z3_ast axiom = Z3ASTHandle(Z3_mk_implies(ctx, lhs, rhs), ctx);
+  Z3_ast axiom = Z3_mk_implies(ctx, lhs, rhs);
   return Z3ASTHandle(axiom, ctx);
 }
 
@@ -876,8 +875,7 @@ Z3ASTHandle Z3Builder::constructActual(ref<Expr> e, int *width_out) {
     Z3_ast body = construct(fe->body, width_out);
     Z3_sort I = Z3_mk_int_sort(ctx);                      
     Z3_ast bound_var = mk_var(ctx, fe->bound_var.c_str(), I);
-    Z3_app bound_vars[MAX_BOUND_VARS];
-    bound_vars[0] = {(Z3_app) bound_var};
+    Z3_app bound_vars[] = {(Z3_app) bound_var};
     int num_bound_vars = 1;
     int weight = 0;
     return forallExpr(weight, num_bound_vars, body, bound_vars);    
@@ -889,8 +887,7 @@ Z3ASTHandle Z3Builder::constructActual(ref<Expr> e, int *width_out) {
     Z3_ast body = construct(ee->body, width_out);
     Z3_sort I = Z3_mk_int_sort(ctx);
     Z3_ast bound_var = mk_var(ctx, ee->bound_var.c_str(), I);
-    Z3_app bound_vars[MAX_BOUND_VARS];
-    bound_vars[0] = {(Z3_app) bound_var};
+    Z3_app bound_vars[] = {(Z3_app) bound_var};
     int num_bound_vars = 1;
     int weight = 0;
     return existsExpr(weight, num_bound_vars, body, bound_vars);
