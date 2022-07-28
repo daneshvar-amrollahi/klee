@@ -33,6 +33,8 @@
 
 #include <stdlib.h>
 #include "klee/util/ExprPPrinter.h"
+#include "klee/Solver.h"
+#include "z3.h"
 
 using namespace llvm;
 using namespace klee;
@@ -1642,6 +1644,27 @@ void SpecialFunctionHandler::handleDaneshvar(ExecutionState &state,
                                                  KInstruction *target,
                                                  std::vector<ref<Expr> > &arguments) {
   printf("Hello Daneshvar\n");
+  llvm::raw_ostream &output = llvm::outs();
+  klee::Solver *solver = klee::createCoreSolver(klee::Z3_SOLVER);
+  ConstraintManager cur_constraints = ConstraintManager();
+  ConstraintManager state_constraints = state.constraints;
+  bool result = false;
+  for (ConstraintManager::constraints_ty::const_iterator 
+         it = state_constraints.begin(), ie = state_constraints.end(); it != ie; ++it) {
+    // ExprPPrinter::printOne(output, "constraint = ", *it);
+    cur_constraints.addConstraint(*it);
+    klee::Query sat_query(cur_constraints, *it);
+    bool success = solver->mayBeTrue(sat_query, result);
+    assert(success && "problem with mayBeTrue");
+    if (result){
+      // printf("SAT until now\n");
+    } 
+    else
+    {
+      // printf("UNSAT until now\n");
+    }
+  }
+  printf("Bye Daneshvar\n");
 }
 
 void SpecialFunctionHandler::handleQuantify(ExecutionState &state,
@@ -1677,7 +1700,7 @@ void SpecialFunctionHandler::handleMemcmp(ExecutionState &state,
   ref<Expr> b = arguments[3];
   ref<Expr> n = arguments[4];
   ref<Expr> i = arguments[5];
-  int sz = cast<ConstantExpr>(n)->getZExtValue();
+  // int sz = cast<ConstantExpr>(n)->getZExtValue();
 
   llvm::raw_ostream &output = llvm::outs();
 
@@ -1693,28 +1716,22 @@ void SpecialFunctionHandler::handleMemcmp(ExecutionState &state,
   assert(success && "resolveOne failed");
   const ObjectState *os_b = op_b.second;
 
-  
-  ref<Expr> jgeq0 = SgeExpr::create(forall_quantified_var, ConstantExpr::create(0, Expr::Int32));
-  ref<Expr> jleqn = SltExpr::create(forall_quantified_var, n);
   ref<Expr> aj = os_a->read(forall_quantified_var, Expr::Int8);
   ref<Expr> bj = os_b->read(forall_quantified_var, Expr::Int8); 
-  ref<Expr> forall_body = ImpliesExpr::create(AndExpr::create(jgeq0, jleqn), EqExpr::create(aj, bj));
-  ref<Expr> forall_expr = ForallExpr::create("fv", forall_quantified_var, forall_body);
+  ref<Expr> forall_body = EqExpr::create(aj, bj);
+  ref<Expr> forall_expr = ForallExpr::create("fqv", forall_quantified_var, forall_body);
   // ExprPPrinter::printOne(output, "  forall_expr = ", forall_expr);
   ref<Expr> c1 = ImpliesExpr::create(EqExpr::create(i, ConstantExpr::create(0, i->getWidth())), forall_expr);
-  //i = 0 ==> (∀j: 0 <= j < n ==> a[j] = b[j])
 
 
-  ref<Expr> kgeq0 = SgeExpr::create(exists_quantified_var, ConstantExpr::create(0, Expr::Int32));
-  ref<Expr> kleqn = SltExpr::create(exists_quantified_var, n);
+
   ref<Expr> ak = os_a->read(exists_quantified_var, Expr::Int8);
   ref<Expr> bk = os_b->read(exists_quantified_var, Expr::Int8);
-  ref<Expr> exists_body = AndExpr::create(AndExpr::create(kgeq0, kleqn), NeExpr::create(ak, bk));
-  ref<Expr> exists_expr = ExistsExpr::create("ev", exists_quantified_var, exists_body);
+  ref<Expr> exists_body = NeExpr::create(ak, bk);
+  ref<Expr> exists_expr = ExistsExpr::create("eqv", exists_quantified_var, exists_body);
   // ExprPPrinter::printOne(output, "  exists_expr = ", exists_expr);
   ref<Expr> c2 = ImpliesExpr::create(EqExpr::create(i, ConstantExpr::create(1, i->getWidth())), exists_expr);
-  //i = 1 ==> (∃j: 0 <= j < n ==> a[j] != b[j])
-
+  
   executor.addConstraint(state, c1);
   executor.addConstraint(state, c2);
 }
