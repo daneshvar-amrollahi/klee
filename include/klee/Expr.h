@@ -1007,7 +1007,7 @@ COMPARISON_EXPR_CLASS(Sge)
 
 class QuantifiedExpr : public NonConstantExpr {
   public:
-    static const unsigned numKids = 2;    //should check where this is used (printing?)
+    static const unsigned numKids = 2;    
     std::string bound_var;                //the name of the variable that is quantified over
     ref<Expr> var;                        //the variable that is quantified over
     ref<Expr> body;                       //the body of the quantifier
@@ -1028,7 +1028,7 @@ class ForallExpr : public QuantifiedExpr {
 
     static ref<Expr> alloc(const std::string &bound_var, const ref<Expr> &var, const ref<Expr> &body) {
       ref<Expr> res(new ForallExpr(bound_var, var, body));
-      // res->computeHash();
+      res->computeHash();
       return res;
     }
 
@@ -1043,7 +1043,7 @@ class ForallExpr : public QuantifiedExpr {
 
     Kind getKind() const { return kind; }
 
-    Width getWidth() const { return NULL; }
+    Width getWidth() const { return var->getWidth() + body->getWidth(); }
 
     unsigned getNumKids() const { return numKids; }
 
@@ -1072,7 +1072,7 @@ class ExistsExpr : public QuantifiedExpr {
 
     static ref<Expr> alloc(const std::string &bound_var, const ref<Expr> &var, const ref<Expr> &body) {
       ref<Expr> res(new ExistsExpr(bound_var, var, body));
-      // res->computeHash();
+      res->computeHash();
       return res;
     }
 
@@ -1087,7 +1087,7 @@ class ExistsExpr : public QuantifiedExpr {
 
     Kind getKind() const { return kind; }
 
-    Width getWidth() const { return NULL; }
+    Width getWidth() const { return var->getWidth() + body->getWidth(); }
 
     unsigned getNumKids() const { return numKids; }
 
