@@ -1007,13 +1007,14 @@ COMPARISON_EXPR_CLASS(Sge)
 
 class QuantifiedExpr : public NonConstantExpr {
   public:
-    static const unsigned numKids = 2;    
+    static const unsigned numKids = 6;    
     std::string bound_var;                //the name of the variable that is quantified over
     ref<Expr> var;                        //the variable that is quantified over
     ref<Expr> body;                       //the body of the quantifier
+    ref<Expr> byte0, byte1, byte2, byte3; //the 4 bytes that make up the bound variable
   protected:
-    QuantifiedExpr(const std::string &bound_var, const ref<Expr> &var, const ref<Expr> &body)
-        : bound_var(bound_var), var(var), body(body) {}
+    QuantifiedExpr(const std::string &bound_var, const ref<Expr> &var, const ref<Expr> &body, const ref<Expr> &byte0, const ref<Expr> &byte1, const ref<Expr> &byte2, const ref<Expr> &byte3)
+        : bound_var(bound_var), var(var), body(body), byte0(byte0), byte1(byte1), byte2(byte2), byte3(byte3)  {}
 
 };
 
@@ -1022,18 +1023,18 @@ class ForallExpr : public QuantifiedExpr {
   public:
     static const Kind kind = Forall;
 
-    ForallExpr(const std::string &bound_var, const ref<Expr> &var, const ref<Expr> &body)
-        : QuantifiedExpr(bound_var, var, body) {}
+    ForallExpr(const std::string &bound_var, const ref<Expr> &var, const ref<Expr> &body, const ref<Expr> &byte0, const ref<Expr> &byte1, const ref<Expr> &byte2, const ref<Expr> &byte3)
+        : QuantifiedExpr(bound_var, var, body, byte0, byte1, byte2, byte3) {}
 
 
-    static ref<Expr> alloc(const std::string &bound_var, const ref<Expr> &var, const ref<Expr> &body) {
-      ref<Expr> res(new ForallExpr(bound_var, var, body));
+    static ref<Expr> alloc(const std::string &bound_var, const ref<Expr> &var, const ref<Expr> &body, const ref<Expr> &byte0, const ref<Expr> &byte1, const ref<Expr> &byte2, const ref<Expr> &byte3) {
+      ref<Expr> res(new ForallExpr(bound_var, var, body, byte0, byte1, byte2, byte3));
       res->computeHash();
       return res;
     }
 
-    static ref<Expr> create(const std::string &bound_var, const ref<Expr> &var, const ref<Expr> &body) {
-      return alloc(bound_var, var, body);
+    static ref<Expr> create(const std::string &bound_var, const ref<Expr> &var, const ref<Expr> &body, const ref<Expr> &byte0, const ref<Expr> &byte1, const ref<Expr> &byte2, const ref<Expr> &byte3) {
+      return alloc(bound_var, var, body, byte0, byte1, byte2, byte3);
     }
 
 
@@ -1052,14 +1053,22 @@ class ForallExpr : public QuantifiedExpr {
         return var;
       } else if (i == 1) {
         return body;
-      } else {
+      } else if (i == 2) 
+        return byte0;
+      else if (i == 3)
+        return byte1;
+      else if (i == 4)
+        return byte2;
+      else if (i == 5)
+        return byte3;
+      else {
         assert(0 && "invalid index");
         return NULL;
       }
     }
 
     ref<Expr> rebuild(ref<Expr> kids[]) const {
-      return create(bound_var, kids[0], kids[1]);
+      return create(bound_var, kids[0], kids[1], kids[2], kids[3], kids[4], kids[5]);
     }
 };
 
@@ -1067,17 +1076,17 @@ class ExistsExpr : public QuantifiedExpr {
   public:
     static const Kind kind = Exists;
 
-    ExistsExpr(const std::string &bound_var, const ref<Expr> &var, const ref<Expr> &body)
-        : QuantifiedExpr(bound_var, var, body) {}
+    ExistsExpr(const std::string &bound_var, const ref<Expr> &var, const ref<Expr> &body, const ref<Expr> &byte0, const ref<Expr> &byte1, const ref<Expr> &byte2, const ref<Expr> &byte3)
+        : QuantifiedExpr(bound_var, var, body, byte0, byte1, byte2, byte3) {}
 
-    static ref<Expr> alloc(const std::string &bound_var, const ref<Expr> &var, const ref<Expr> &body) {
-      ref<Expr> res(new ExistsExpr(bound_var, var, body));
+    static ref<Expr> alloc(const std::string &bound_var, const ref<Expr> &var, const ref<Expr> &body, const ref<Expr> &byte0, const ref<Expr> &byte1, const ref<Expr> &byte2, const ref<Expr> &byte3) {
+      ref<Expr> res(new ExistsExpr(bound_var, var, body, byte0, byte1, byte2, byte3));
       res->computeHash();
       return res;
     }
 
-    static ref<Expr> create(const std::string &bound_var, const ref<Expr> &var, const ref<Expr> &body) {
-      return alloc(bound_var, var, body);
+    static ref<Expr> create(const std::string &bound_var, const ref<Expr> &var, const ref<Expr> &body, const ref<Expr> &byte0, const ref<Expr> &byte1, const ref<Expr> &byte2, const ref<Expr> &byte3) {
+      return alloc(bound_var, var, body, byte0, byte1, byte2, byte3);
     }
 
 
@@ -1096,14 +1105,22 @@ class ExistsExpr : public QuantifiedExpr {
         return var;
       } else if (i == 1) {
         return body;
-      } else {
+      } else if (i == 2) 
+        return byte0;
+      else if (i == 3)
+        return byte1;
+      else if (i == 4)
+        return byte2;
+      else if (i == 5)
+        return byte3;
+      else {
         assert(0 && "invalid index");
         return NULL;
       }
     }
 
     ref<Expr> rebuild(ref<Expr> kids[]) const {
-      return create(bound_var, kids[0], kids[1]);
+      return create(bound_var, kids[0], kids[1], kids[2], kids[3], kids[4], kids[5]);
     }
 };
 
