@@ -19,6 +19,8 @@
 #include "llvm/ADT/StringExtras.h"
 #include "llvm/Support/CommandLine.h"
 
+#include "klee/util/ExprPPrinter.h"
+
 #define MAX_BOUND_VARS 100
 
 using namespace klee;
@@ -873,8 +875,13 @@ Z3ASTHandle Z3Builder::constructActual(ref<Expr> e, int *width_out) {
     ForallExpr *fe = cast<ForallExpr>(e);
     *width_out = 1;
     Z3_ast body = construct(fe->body, width_out);
-    Z3_sort I = Z3_mk_int_sort(ctx);                      
-    Z3_ast bound_var = mk_var(ctx, fe->bound_var.c_str(), I);
+
+    // Z3_sort I = Z3_mk_bv_sort(ctx, 4);                      
+    // Z3_ast bound_var = mk_var(ctx, fe->bound_var.c_str(), I);
+    // Z3_app bound_vars[] = {(Z3_app) bound_var};
+
+    ref<Expr> ce = ConcatExpr::create4(fe->byte0, fe->byte1, fe->byte2, fe->byte3);
+    Z3_ast bound_var = construct(ce, width_out);
     Z3_app bound_vars[] = {(Z3_app) bound_var};
     int num_bound_vars = 1;
     int weight = 0;
@@ -885,8 +892,13 @@ Z3ASTHandle Z3Builder::constructActual(ref<Expr> e, int *width_out) {
     ExistsExpr *ee = cast<ExistsExpr>(e);
     *width_out = 1;
     Z3_ast body = construct(ee->body, width_out);
-    Z3_sort I = Z3_mk_int_sort(ctx);
-    Z3_ast bound_var = mk_var(ctx, ee->bound_var.c_str(), I);
+
+    // Z3_sort I = Z3_mk_bv_sort(ctx, 4);
+    // Z3_ast bound_var = mk_var(ctx, ee->bound_var.c_str(), I);
+    // Z3_app bound_vars[] = {(Z3_app) bound_var};
+
+    ref<Expr> ce = ConcatExpr::create4(ee->byte0, ee->byte1, ee->byte2, ee->byte3);
+    Z3_ast bound_var = construct(ce, width_out);
     Z3_app bound_vars[] = {(Z3_app) bound_var};
     int num_bound_vars = 1;
     int weight = 0;
