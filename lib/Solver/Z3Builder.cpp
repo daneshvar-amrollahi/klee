@@ -401,7 +401,7 @@ Z3ASTHandle Z3Builder::getInitialArray(const Array *root) {
     unsigned const space = (root->name.length() > 32 - uid_length)
                                ? (32 - uid_length)
                                : root->name.length();
-    std::string unique_name = root->name.substr(0, space) + unique_id;
+    std::string unique_name = root->name.substr(0, space) /* + unique_id */;
     array_expr = buildArray(unique_name.c_str(), root->getDomain(),
                             root->getRange());
 
@@ -876,12 +876,18 @@ Z3ASTHandle Z3Builder::constructActual(ref<Expr> e, int *width_out) {
     *width_out = 1;
     Z3_ast body = construct(fe->body, width_out);
 
-    // Z3_sort I = Z3_mk_bv_sort(ctx, 4);                      
-    // Z3_ast bound_var = mk_var(ctx, fe->bound_var.c_str(), I);
-    // Z3_app bound_vars[] = {(Z3_app) bound_var};
+    Z3_sort I = Z3_mk_int_sort(ctx);                     
+    Z3_ast bound_var = mk_var(ctx, fe->bound_var.c_str(), I);
 
-    ref<Expr> ce = ConcatExpr::create4(fe->byte0, fe->byte1, fe->byte2, fe->byte3);
-    Z3_ast bound_var = construct(ce, width_out);
+    // ref<Expr> ce = ConcatExpr::create4(fe->byte0, fe->byte1, fe->byte2, fe->byte3);
+    // bound_var = construct(ce, width_out);
+
+
+    // printf("ce AST = %s\n", Z3_ast_to_string(ctx, bound_var));
+    // printf("body = %s\n", Z3_ast_to_string(ctx, body));
+
+
+
     Z3_app bound_vars[] = {(Z3_app) bound_var};
     int num_bound_vars = 1;
     int weight = 0;
@@ -893,12 +899,11 @@ Z3ASTHandle Z3Builder::constructActual(ref<Expr> e, int *width_out) {
     *width_out = 1;
     Z3_ast body = construct(ee->body, width_out);
 
-    // Z3_sort I = Z3_mk_bv_sort(ctx, 4);
-    // Z3_ast bound_var = mk_var(ctx, ee->bound_var.c_str(), I);
-    // Z3_app bound_vars[] = {(Z3_app) bound_var};
+    Z3_sort I = Z3_mk_int_sort(ctx);
+    Z3_ast bound_var = mk_var(ctx, ee->bound_var.c_str(), I);
 
     ref<Expr> ce = ConcatExpr::create4(ee->byte0, ee->byte1, ee->byte2, ee->byte3);
-    Z3_ast bound_var = construct(ce, width_out);
+    // Z3_ast bound_var = construct(ce, width_out);
     Z3_app bound_vars[] = {(Z3_app) bound_var};
     int num_bound_vars = 1;
     int weight = 0;

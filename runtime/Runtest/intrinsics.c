@@ -383,4 +383,4 @@ void klee_daneshvar() {}
 
 void klee_quantify(uintptr_t x) {}
 
-void klee_memcmp(int forall_quantified_var, int exists_quantified_var, int *a, int *b, int n, int i);
+void klee_memcmp(int *forall_quantified_var, int *exists_quantified_var, int *a, int *b, int n, int i);

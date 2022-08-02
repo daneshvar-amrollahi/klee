@@ -5,13 +5,13 @@ int match(int *a, int* b, int n)
 {
         int i;
         klee_make_symbolic(&i, sizeof(i), "memcmp_return_value");
-        int forall_quantified_var, exists_quantified_var;
-        klee_make_symbolic(&forall_quantified_var, sizeof(forall_quantified_var), "fqv");
-        klee_make_symbolic(&exists_quantified_var, sizeof(exists_quantified_var), "eqv");
-        klee_assume(forall_quantified_var < n);
-        klee_assume(forall_quantified_var >= 0);
-        klee_assume(exists_quantified_var < n);
-        klee_assume(exists_quantified_var >= 0);
+        int forall_quantified_var[1], exists_quantified_var[1];
+        klee_make_symbolic(forall_quantified_var, sizeof(forall_quantified_var), "fqv");
+        klee_make_symbolic(exists_quantified_var, sizeof(exists_quantified_var), "eqv");
+        klee_assume(forall_quantified_var[0] < n);
+        klee_assume(forall_quantified_var[0] >= 0);
+        klee_assume(exists_quantified_var[0] < n);
+        klee_assume(exists_quantified_var[0] >= 0);
         klee_assume(i == 0 || i == 1);
         klee_memcmp(forall_quantified_var, exists_quantified_var, a, b, n, i);
         return i;
