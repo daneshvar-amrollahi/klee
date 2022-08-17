@@ -260,16 +260,10 @@ bool Z3SolverImpl::internalRunSolver(
 
   ConstantArrayFinder constant_arrays_in_query;
   for (auto const &constraint : query.constraints) {
-
-    llvm::raw_ostream &output = llvm::outs();
-    // output << "c = " << constraint << "\n";
-    auto c = builder->construct(constraint);
-    // printf("%s\n", Z3_ast_to_string(builder->ctx, c));
     Z3_solver_assert(builder->ctx, theSolver, builder->construct(constraint));
     constant_arrays_in_query.visit(constraint);
   }
 
-  // printf("------------------------------------------------\n");
   ++stats::queries;
   if (objects)
     ++stats::queryCounterexamples;
