@@ -177,7 +177,6 @@ static SpecialFunctionHandler::HandlerInfo handlerInfo[] = {
   add("klee_map_symbol_names", handleMapSymbolNames, false),
   add("klee_add_bpf_call", handleAddBPFCall, false),
   add("klee_daneshvar", handleDaneshvar, false),
-  add("klee_quantify", handleQuantify, false),
   add("klee_memcmp", handleMemcmp, false),
 
   // operator delete[](void*)
@@ -1644,47 +1643,30 @@ void SpecialFunctionHandler::handleDaneshvar(ExecutionState &state,
                                                  KInstruction *target,
                                                  std::vector<ref<Expr> > &arguments) {
                           
-  // printf("HELLO DANESHVAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAR\n");
+  printf("Hello Daneshvar\n");
 
-  llvm::raw_ostream &output = llvm::outs();
-  klee::Solver *solver = klee::createCoreSolver(klee::Z3_SOLVER);
-  ConstraintManager cur_constraints = ConstraintManager();
-  ConstraintManager state_constraints = state.constraints;
-  bool result = false;
-  for (ConstraintManager::constraints_ty::const_iterator 
-         it = state_constraints.begin(), ie = state_constraints.end(); it != ie; ++it) {
-    // ExprPPrinter::printOne(output, "constraint = ", *it);
-    cur_constraints.addConstraint(*it);
-    klee::Query sat_query(cur_constraints, *it);
-    bool success = solver->mayBeTrue(sat_query, result);
-    assert(success && "problem with mayBeTrue");
-    if (result){
-      // printf("SAT until now\n");
-    } 
-    else
-    {
-      // printf("UNSAT until now\n")
-    }
-  }
+  // llvm::raw_ostream &output = llvm::outs();
+  // klee::Solver *solver = klee::createCoreSolver(klee::Z3_SOLVER);
+  // ConstraintManager cur_constraints = ConstraintManager();
+  // ConstraintManager state_constraints = state.constraints;
+  // bool result = false;
+  // for (ConstraintManager::constraints_ty::const_iterator 
+  //        it = state_constraints.begin(), ie = state_constraints.end(); it != ie; ++it) {
+  //   // ExprPPrinter::printOne(output, "constraint = ", *it);
+  //   cur_constraints.addConstraint(*it);
+  //   klee::Query sat_query(cur_constraints, *it);
+  //   bool success = solver->mayBeTrue(sat_query, result);
+  //   assert(success && "problem with mayBeTrue");
+  //   if (result){
+  //     // printf("SAT until now\n");
+  //   } 
+  //   else
+  //   {
+  //     // printf("UNSAT until now\n")
+  //   }
+  // }
 
-  // printf("BYE DANESHVAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAR\n");
-}
-
-void SpecialFunctionHandler::handleQuantify(ExecutionState &state,
-                                                 KInstruction *target,
-                                                 std::vector<ref<Expr> > &arguments) {
-
-  printf("Hello Quantify\n");
-
-  assert(arguments.size()==1 && "invalid number of arguments to klee_quantify");
-
-  ref<Expr> condition = arguments[0];
-  
-  if (condition->getWidth() != Expr::Bool)
-    condition = NeExpr::create(condition, ConstantExpr::create(0, condition->getWidth()));
-
-  llvm::raw_ostream &output = llvm::outs();
-  ExprPPrinter::printOne(output, "  Condition", condition);
+  // printf("BYE DANESHVAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAR\n");
 }
 
 
@@ -1697,77 +1679,46 @@ void SpecialFunctionHandler::handleMemcmp(ExecutionState &state,
        Executor::User);
   }
 
-  llvm::raw_ostream &output = llvm::outs();
+  // llvm::raw_ostream &output = llvm::outs();
 
-  ref<Expr> forall_quantified_var = arguments[0];
-  ref<Expr> exists_quantified_var = arguments[1];
-  ref<Expr> a = arguments[2];
-  ref<Expr> b = arguments[3];
-  ref<Expr> n = arguments[4];
+  ref<Expr> a = arguments[0];
+  ref<Expr> b = arguments[1];
+  ref<Expr> n = arguments[2];
+  ref<Expr> fqv = arguments[3];
+  ref<Expr> eqv = arguments[4];
   ref<Expr> i = arguments[5];
-
-
-
-  ObjectPair op_fqv;
-  ref<klee::ConstantExpr> address_fqv = cast<klee::ConstantExpr>(forall_quantified_var);
-  bool success = state.addressSpace.resolveOne(address_fqv, op_fqv);
-  assert(success && "resolveOne failed");
-  const ObjectState *os_fqv = op_fqv.second;
-  ref<Expr> fqv_32 = os_fqv->read(0, Expr::Int32);
-
+      
   ObjectPair op_a;
-  ref<klee::ConstantExpr> address_a = cast<klee::ConstantExpr>(a);
-  success = state.addressSpace.resolveOne(address_a, op_a);
-  assert(success && "resolveOne failed");
+  ref<klee::ConstantExpr> address = cast<klee::ConstantExpr>(a);
+  bool success = state.addressSpace.resolveOne(address, op_a);
+  assert(success && "unable to resolve address of a");
   const ObjectState *os_a = op_a.second;
-  ref<Expr> aj = os_a->read(fqv_32, Expr::Int8);
-  // ExprPPrinter::printOne(output, "  aj = ", aj);
-
+  ref<Expr> aeqv = os_a->read(eqv, Expr::Int8);
 
   ObjectPair op_b;
   ref<klee::ConstantExpr> address_b = cast<klee::ConstantExpr>(b);
   success = state.addressSpace.resolveOne(address_b, op_b);
-  assert(success && "resolveOne failed");
+  assert(success && "unable to resolve address of b");
   const ObjectState *os_b = op_b.second;
-  ref<Expr> bj = os_b->read(fqv_32, Expr::Int8); 
-  // ExprPPrinter::printOne(output, "  bj = ", bj);
-
-
-  ref<Expr> fqv_byte3 = os_fqv->read(0, Expr::Int8);
-  ref<Expr> fqv_byte2 = os_fqv->read(1, Expr::Int8);
-  ref<Expr> fqv_byte1 = os_fqv->read(2, Expr::Int8);
-  ref<Expr> fqv_byte0 = os_fqv->read(3, Expr::Int8);
-  ref<Expr> forall_body = EqExpr::create(aj, bj);
-  ref<Expr> forall_expr = ForallExpr::create("fqv", fqv_32, forall_body, fqv_byte0, fqv_byte1, fqv_byte2, fqv_byte3);
-  // ExprPPrinter::printOne(output, "  forall_expr = ", forall_expr);
-  ref<Expr> c1 = ImpliesExpr::create(EqExpr::create(i, ConstantExpr::create(0, i->getWidth())), forall_expr);
-
-
-  ObjectPair op_eqv;
-  ref<klee::ConstantExpr> address_eqv = cast<klee::ConstantExpr>(exists_quantified_var);
-  success = state.addressSpace.resolveOne(address_eqv, op_eqv);
-  assert(success && "resolveOne failed");
-  const ObjectState *os_eqv = op_eqv.second;
-  ref<Expr> eqv_32 = os_eqv->read(0, Expr::Int32);
-  ref<Expr> ak = os_a->read(eqv_32, Expr::Int8);
-  ref<Expr> bk = os_b->read(eqv_32, Expr::Int8);
-  // ExprPPrinter::printOne(output, "  ak = ", ak);
-  // ExprPPrinter::printOne(output, "  bk = ", bk);
-
-  ref<Expr> eqv_byte3 = os_eqv->read(0, Expr::Int8);
-  ref<Expr> eqv_byte2 = os_eqv->read(1, Expr::Int8);
-  ref<Expr> eqv_byte1 = os_eqv->read(2, Expr::Int8);
-  ref<Expr> eqv_byte0 = os_eqv->read(3, Expr::Int8);
-
+  ref<Expr> beqv = os_b->read(eqv, Expr::Int8);
+  
+  ref<Expr> ieq1 = EqExpr::create(i, ConstantExpr::create(1, Expr::Int32));
+  ref<Expr> exists_body = NeExpr::create(aeqv, beqv);
+  ref<Expr> ee = ExistsExpr::create("hi", eqv, exists_body);
+  ref<Expr> impliesExists = Expr::createImplies(ieq1, ee); 
+  executor.addConstraint(state, impliesExists);
 
   
-  ref<Expr> exists_body = NeExpr::create(ak, bk);
-  ref<Expr> exists_expr = ExistsExpr::create("eqv", exists_quantified_var, exists_body, eqv_byte0, eqv_byte1, eqv_byte2, eqv_byte3);
-  // ExprPPrinter::printOne(output, "  exists_expr = ", exists_expr);
+  // ref<Expr> ieq0 = EqExpr::create(i, ConstantExpr::create(0, Expr::Int32));
+  // ref<Expr> forall_body = EqExpr::create(afqv, bfqv);
+  // ref<Expr> fe = ForallExpr::create("fqv", fqv, forall_body);
+  // ref<Expr> impliesForall = Expr::createImplies(ieq0, fe);
+  
+  // executor.addConstraint(state, fe);
+  
 
-  ref<Expr> c2 = ImpliesExpr::create(EqExpr::create(i, ConstantExpr::create(1, i->getWidth())), exists_expr);
-  executor.addConstraint(state, c1);
-  executor.addConstraint(state, c2);
+//  executor.addConstraint(state, EqExpr::create(afqv, bfqv));
+
 }
 
 

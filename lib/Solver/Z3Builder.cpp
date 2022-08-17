@@ -125,13 +125,16 @@ Z3SortHandle Z3Builder::getArraySort(Z3SortHandle domainSort,
   return Z3SortHandle(Z3_mk_array_sort(ctx, domainSort, rangeSort), ctx);
 }
 
+Z3_ast last_z3_mk_const;
 Z3ASTHandle Z3Builder::buildArray(const char *name, unsigned indexWidth,
                                   unsigned valueWidth) {
   Z3SortHandle domainSort = getBvSort(indexWidth);
   Z3SortHandle rangeSort = getBvSort(valueWidth);
   Z3SortHandle t = getArraySort(domainSort, rangeSort);
   Z3_symbol s = Z3_mk_string_symbol(ctx, const_cast<char *>(name));
-  return Z3ASTHandle(Z3_mk_const(ctx, s, t), ctx);
+  Z3_ast ans = Z3_mk_const(ctx, s, t);
+  last_z3_mk_const = ans;
+  return Z3ASTHandle(ans, ctx);
 }
 
 Z3ASTHandle Z3Builder::getTrue() { return Z3ASTHandle(Z3_mk_true(ctx), ctx); }
@@ -401,7 +404,7 @@ Z3ASTHandle Z3Builder::getInitialArray(const Array *root) {
     unsigned const space = (root->name.length() > 32 - uid_length)
                                ? (32 - uid_length)
                                : root->name.length();
-    std::string unique_name = root->name.substr(0, space) /* + unique_id */;
+    std::string unique_name = root->name.substr(0, space) + unique_id;
     array_expr = buildArray(unique_name.c_str(), root->getDomain(),
                             root->getRange());
 
@@ -453,7 +456,7 @@ Z3ASTHandle Z3Builder::getArrayForUpdate(const Array *root,
 }
 
 
-Z3ASTHandle Z3Builder::forallExpr(unsigned int weight, unsigned int num_bound_vars, Z3_ast body, Z3_app bound_vars[]) { 
+Z3ASTHandle Z3Builder::forallExpr(unsigned int weight, unsigned int num_bound_vars, Z3_ast body, Z3_app bound_vars[]) {
   Z3_ast axiom = Z3_mk_forall_const(ctx, weight, num_bound_vars, bound_vars, 0, 0, body);
   return Z3ASTHandle(axiom, ctx);
 }
@@ -480,6 +483,7 @@ Z3_ast mk_var(Z3_context ctx, const char * name, Z3_sort ty)
 Z3ASTHandle Z3Builder::construct(ref<Expr> e, int *width_out) {
   // TODO: We could potentially use Z3_simplify() here
   // to store simpler expressions.
+  llvm::raw_ostream &output = llvm::outs();  
   if (!UseConstructHashZ3 || isa<ConstantExpr>(e)) {
     return constructActual(e, width_out);
   } else {
@@ -509,6 +513,7 @@ Z3ASTHandle Z3Builder::constructActual(ref<Expr> e, int *width_out) {
 
   ++stats::queryConstructs;
 
+  llvm::raw_ostream &output = llvm::outs();    
   switch (e->getKind()) {
   case Expr::Constant: {
     ConstantExpr *CE = cast<ConstantExpr>(e);
@@ -870,23 +875,19 @@ Z3ASTHandle Z3Builder::constructActual(ref<Expr> e, int *width_out) {
     return sbvLeExpr(left, right);
   }
 
-  // Quantified
   case Expr::Forall: {
     ForallExpr *fe = cast<ForallExpr>(e);
     *width_out = 1;
+
+    // ref<Expr> concatQuantifiedVar = ConcatQuantifiedVarExpr::create(fe->var->getKid(0), fe->var->getKid(1));
+    // concatQuantifiedVar->quantifiedVarName = fe->bound_var;
+
+    construct(fe->var, width_out);
+    Z3_ast bound_var = last_z3_mk_const ;
     Z3_ast body = construct(fe->body, width_out);
 
-    Z3_sort I = Z3_mk_int_sort(ctx);                     
-    Z3_ast bound_var = mk_var(ctx, fe->bound_var.c_str(), I);
-
-    // ref<Expr> ce = ConcatExpr::create4(fe->byte0, fe->byte1, fe->byte2, fe->byte3);
-    // bound_var = construct(ce, width_out);
-
-
-    // printf("ce AST = %s\n", Z3_ast_to_string(ctx, bound_var));
-    // printf("body = %s\n", Z3_ast_to_string(ctx, body));
-
-
+    // printf("case Expr::Forall bound_var = %s\n", Z3_ast_to_string(ctx, bound_var));
+    // printf("case Expr::Forall body = %s\n", Z3_ast_to_string(ctx, body));
 
     Z3_app bound_vars[] = {(Z3_app) bound_var};
     int num_bound_vars = 1;
@@ -897,21 +898,27 @@ Z3ASTHandle Z3Builder::constructActual(ref<Expr> e, int *width_out) {
   case Expr::Exists: {
     ExistsExpr *ee = cast<ExistsExpr>(e);
     *width_out = 1;
+
+    Z3_sort bv = Z3_mk_bv_sort(ctx, 32);
+    Z3_symbol   s  = Z3_mk_string_symbol(ctx, ee->bound_var.c_str());
+    Z3_ast bound_var = Z3_mk_const(ctx, s, bv);      
+
+    Z3_ast hack_bound_var = construct(ee->var, width_out);
+    Z3_ast force_equality = Z3_mk_eq(ctx, bound_var, hack_bound_var);
     Z3_ast body = construct(ee->body, width_out);
 
-    Z3_sort I = Z3_mk_int_sort(ctx);
-    Z3_ast bound_var = mk_var(ctx, ee->bound_var.c_str(), I);
+    Z3_ast and_args[2] = {force_equality, body};
+    Z3_ast anded_body = Z3_mk_and(ctx, 2, and_args); 
 
-    ref<Expr> ce = ConcatExpr::create4(ee->byte0, ee->byte1, ee->byte2, ee->byte3);
-    // Z3_ast bound_var = construct(ce, width_out);
     Z3_app bound_vars[] = {(Z3_app) bound_var};
     int num_bound_vars = 1;
     int weight = 0;
-    return existsExpr(weight, num_bound_vars, body, bound_vars);
+    return existsExpr(weight, num_bound_vars, anded_body, bound_vars); 
   }
 
   case Expr::Implies: {
     ImpliesExpr *ie = cast<ImpliesExpr>(e);
+    *width_out = 1;
     Z3ASTHandle left = construct(ie->left, width_out);
     Z3ASTHandle right = construct(ie->right, width_out);
     return impliesExpr(left, right); 
