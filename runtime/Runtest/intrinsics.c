@@ -381,4 +381,4 @@ void klee_dump_constraints() {}
 
 void klee_daneshvar() {}
 
-void klee_memcmp(char *a, char *b, int n, int fqv, int eqv, int i);
+void klee_memcmp(char *a, char *b, int n, int eqv, int i);
