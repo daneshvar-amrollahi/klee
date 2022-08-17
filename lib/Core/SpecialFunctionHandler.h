@@ -175,7 +175,6 @@ public:
   HANDLER(handleMapSymbolNames);
   HANDLER(handleAddBPFCall);
   HANDLER(handleDaneshvar);
-  HANDLER(handleQuantify);
   HANDLER(handleMemcmp);
 #undef HANDLER
 
