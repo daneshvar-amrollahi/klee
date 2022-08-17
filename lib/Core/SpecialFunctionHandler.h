@@ -176,6 +176,7 @@ public:
   HANDLER(handleAddBPFCall);
   HANDLER(handleDaneshvar);
   HANDLER(handleMemcmp);
+  HANDLER(handleMemchr);
 #undef HANDLER
 
 };

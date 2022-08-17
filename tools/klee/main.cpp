@@ -2120,8 +2120,8 @@ static const char *modelledExternals[] = {
     "klee_map_symbol_names",
 
     "klee_daneshvar"
-
     "klee_memcmp"
+    "klee_memchr"
 
     /* tracing functions end */
 

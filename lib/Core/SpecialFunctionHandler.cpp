@@ -178,6 +178,7 @@ static SpecialFunctionHandler::HandlerInfo handlerInfo[] = {
   add("klee_add_bpf_call", handleAddBPFCall, false),
   add("klee_daneshvar", handleDaneshvar, false),
   add("klee_memcmp", handleMemcmp, false),
+  add("klee_memchr", handleMemchr, false),
 
   // operator delete[](void*)
   add("_ZdaPv", handleDeleteArray, false),
@@ -1727,3 +1728,16 @@ void SpecialFunctionHandler::handleMemcmp(ExecutionState &state,
 }
 
 
+
+void SpecialFunctionHandler::handleMemchr(ExecutionState &state,
+                                                 KInstruction *target,
+                                                 std::vector<ref<Expr> > &arguments) {
+  if (arguments.size() != 3) {
+    executor.terminateStateOnError
+      (state, "Incorrect number of arguments to klee_memcmp",
+       Executor::User);
+  }
+
+  printf("Hello from handleMemchr...\n");
+
+}
