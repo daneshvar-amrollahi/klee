@@ -179,8 +179,6 @@ public:
     Forall,
     Exists,
 
-    //Implied
-    Implies,
   };
 
   unsigned refCount;
@@ -956,7 +954,6 @@ ARITHMETIC_EXPR_CLASS(Xor)
 ARITHMETIC_EXPR_CLASS(Shl)
 ARITHMETIC_EXPR_CLASS(LShr)
 ARITHMETIC_EXPR_CLASS(AShr)
-ARITHMETIC_EXPR_CLASS(Implies) //This is also sort of a binary expr, because it has l and r
 
 // Comparison Exprs
 

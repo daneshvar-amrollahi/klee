@@ -466,11 +466,6 @@ Z3ASTHandle Z3Builder::existsExpr(unsigned int weight, unsigned int num_bound_va
   return Z3ASTHandle(axiom, ctx);
 }
 
-Z3ASTHandle Z3Builder::impliesExpr(Z3ASTHandle lhs, Z3ASTHandle rhs) {
-  Z3_ast axiom = Z3_mk_implies(ctx, lhs, rhs);
-  return Z3ASTHandle(axiom, ctx);
-}
-
 Z3_ast mk_var(Z3_context ctx, const char * name, Z3_sort ty)
 {
     Z3_symbol   s  = Z3_mk_string_symbol(ctx, name);
@@ -914,14 +909,6 @@ Z3ASTHandle Z3Builder::constructActual(ref<Expr> e, int *width_out) {
     int num_bound_vars = 1;
     int weight = 0;
     return existsExpr(weight, num_bound_vars, anded_body, bound_vars); 
-  }
-
-  case Expr::Implies: {
-    ImpliesExpr *ie = cast<ImpliesExpr>(e);
-    *width_out = 1;
-    Z3ASTHandle left = construct(ie->left, width_out);
-    Z3ASTHandle right = construct(ie->right, width_out);
-    return impliesExpr(left, right); 
   }
 
 // unused due to canonicalization

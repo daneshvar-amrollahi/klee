@@ -166,7 +166,6 @@ void Expr::printKind(llvm::raw_ostream &os, Kind k) {
     X(Sge);
     X(Forall);
     X(Exists);
-    X(Implies);
 #undef X
   default:
     assert(0 && "invalid kind");
@@ -288,7 +287,6 @@ ref<Expr> Expr::createFromKind(Kind k, std::vector<CreateArg> args) {
       BINARY_EXPR_CASE(Shl);
       BINARY_EXPR_CASE(LShr);
       BINARY_EXPR_CASE(AShr);
-      BINARY_EXPR_CASE(Implies);
       
       BINARY_EXPR_CASE(Eq);
       BINARY_EXPR_CASE(Ne);
@@ -707,13 +705,6 @@ ref<Expr> NotExpr::create(const ref<Expr> &e) {
     return CE->Not();
   
   return NotExpr::alloc(e);
-}
-
-
-/***/
-
-ref<Expr> ImpliesExpr::create(const ref<Expr> &l, const ref<Expr> &r) {
-  return new ImpliesExpr(l, r);
 }
 
 /***/

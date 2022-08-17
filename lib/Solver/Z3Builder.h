@@ -170,7 +170,6 @@ private:
   // Quantified formulas
   Z3ASTHandle forallExpr(unsigned int weight, unsigned int num_bound_vars, Z3_ast body, Z3_app bound_vars[]);
   Z3ASTHandle existsExpr(unsigned int weight, unsigned int num_bound_vars, Z3_ast body, Z3_app bound_vars[]);
-  Z3ASTHandle impliesExpr(Z3ASTHandle lhs, Z3ASTHandle rhs);
   
   bool autoClearConstructCache;
   std::string z3LogInteractionFile;
