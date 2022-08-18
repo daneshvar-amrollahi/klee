@@ -1728,16 +1728,54 @@ void SpecialFunctionHandler::handleMemcmp(ExecutionState &state,
 }
 
 
+//ret = 0 ==> not found
+//ret = i (i > 0) ===> str[i - 1] = c
 
 void SpecialFunctionHandler::handleMemchr(ExecutionState &state,
                                                  KInstruction *target,
                                                  std::vector<ref<Expr> > &arguments) {
-  if (arguments.size() != 3) {
+  if (arguments.size() != 5) {
     executor.terminateStateOnError
       (state, "Incorrect number of arguments to klee_memcmp",
        Executor::User);
   }
 
-  printf("Hello from handleMemchr...\n");
+  ref<Expr> str = arguments[0];  
+  ref<Expr> c = arguments[1];
+  ref<Expr> _n = arguments[2];
+  ref<Expr> ret = arguments[3];
+  ref<Expr> impliesVar = arguments[4];
 
+  int n = cast<ConstantExpr>(_n)->getZExtValue();
+
+  executor.addConstraint(state, UltExpr::create(impliesVar, ret));       // impliesVar < ret
+  executor.addConstraint(state, UgeExpr::create(impliesVar, ConstantExpr::create(0, Expr::Int32)));       // impliesVar >= 0
+  executor.addConstraint(state, UleExpr::create(ret, _n));       // ret <= n
+  executor.addConstraint(state, UgeExpr::create(ret, ConstantExpr::create(0, Expr::Int32)));       // ret >= 0
+
+  ObjectPair op_str;
+  ref<klee::ConstantExpr> address = cast<klee::ConstantExpr>(str);
+  bool success = state.addressSpace.resolveOne(address, op_str);
+  assert(success && "unable to resolve address of str");
+  const ObjectState *os_str = op_str.second;
+
+  llvm::raw_ostream &output = llvm::outs();
+  // output << "str[0] = " << os_str->read(0, Expr::Int8) << "\n";
+  // output << "c = " << c << "\n";
+
+  ref<Expr> rhs = NeExpr::create(os_str->read(0, Expr::Int8), c);
+  for (int i = 1; i < n; i++)
+  {
+    ref<Expr> lhs = NeExpr::create(os_str->read(i, Expr::Int8), c);
+    ref<Expr> andExpr = AndExpr::create(lhs, rhs);
+    rhs = andExpr; 
+  }
+  ref<Expr> impliesExists = Expr::createImplies(EqExpr::create(ret, _n), rhs); 
+  executor.addConstraint(state, impliesExists); // (ret == n) ==> str[0] != c ∧ ... ∧ str[n - 1] != c
+
+  ref<Expr> strImpliesVar = os_str->read(impliesVar, Expr::Int8);
+  ref<Expr> impliesExpr = Expr::createImplies(UltExpr::create(impliesVar, ret), NeExpr::create(strImpliesVar, c));
+  impliesExpr = AndExpr::create(impliesExpr, EqExpr::create(os_str->read(ret, Expr::Int8), c));
+  impliesExpr = Expr::createImplies(UltExpr::create(ret, _n), impliesExpr);
+  executor.addConstraint(state, impliesExpr); //ret < n ==> ( (impliesVar < ret) ==> (str[impliesVar] != c) ) ∧ (str[ret] == c)
 }
