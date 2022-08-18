@@ -379,8 +379,6 @@ void klee_allow_access(void *ptr, int width) {}
 
 void klee_dump_constraints() {}
 
-void klee_daneshvar() {}
-
 void klee_memcmp(char *a, char *b, int n, int eqv, int i);
 
 void klee_memchr(char *str, char c, int n, int ret, int impliesVar);

@@ -176,7 +176,6 @@ static SpecialFunctionHandler::HandlerInfo handlerInfo[] = {
   add("klee_possibly_havoc", handlePossiblyHavoc, false),
   add("klee_map_symbol_names", handleMapSymbolNames, false),
   add("klee_add_bpf_call", handleAddBPFCall, false),
-  add("klee_daneshvar", handleDaneshvar, false),
   add("klee_memcmp", handleMemcmp, false),
   add("klee_memchr", handleMemchr, false),
 
@@ -1639,37 +1638,6 @@ void SpecialFunctionHandler::handleAddBPFCall(ExecutionState &state,
   /* Terrible HACK. This has to go */
   state.bpf_calls++;                                      
 }
-
-void SpecialFunctionHandler::handleDaneshvar(ExecutionState &state,
-                                                 KInstruction *target,
-                                                 std::vector<ref<Expr> > &arguments) {
-                          
-  printf("Hello Daneshvar\n");
-
-  // llvm::raw_ostream &output = llvm::outs();
-  // klee::Solver *solver = klee::createCoreSolver(klee::Z3_SOLVER);
-  // ConstraintManager cur_constraints = ConstraintManager();
-  // ConstraintManager state_constraints = state.constraints;
-  // bool result = false;
-  // for (ConstraintManager::constraints_ty::const_iterator 
-  //        it = state_constraints.begin(), ie = state_constraints.end(); it != ie; ++it) {
-  //   // ExprPPrinter::printOne(output, "constraint = ", *it);
-  //   cur_constraints.addConstraint(*it);
-  //   klee::Query sat_query(cur_constraints, *it);
-  //   bool success = solver->mayBeTrue(sat_query, result);
-  //   assert(success && "problem with mayBeTrue");
-  //   if (result){
-  //     // printf("SAT until now\n");
-  //   } 
-  //   else
-  //   {
-  //     // printf("UNSAT until now\n")
-  //   }
-  // }
-
-  // printf("BYE DANESHVAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAR\n");
-}
-
 
 void SpecialFunctionHandler::handleMemcmp(ExecutionState &state,
                                                  KInstruction *target,

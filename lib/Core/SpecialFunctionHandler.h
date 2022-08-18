@@ -174,7 +174,6 @@ public:
   HANDLER(handlePossiblyHavoc);
   HANDLER(handleMapSymbolNames);
   HANDLER(handleAddBPFCall);
-  HANDLER(handleDaneshvar);
   HANDLER(handleMemcmp);
   HANDLER(handleMemchr);
 #undef HANDLER
