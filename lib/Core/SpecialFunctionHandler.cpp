@@ -1648,8 +1648,6 @@ void SpecialFunctionHandler::handleMemcmp(ExecutionState &state,
        Executor::User);
   }
 
-  // llvm::raw_ostream &output = llvm::outs();
-
   ref<Expr> a = arguments[0];
   ref<Expr> b = arguments[1];
   ref<Expr> n = arguments[2];
@@ -1695,10 +1693,6 @@ void SpecialFunctionHandler::handleMemcmp(ExecutionState &state,
   executor.addConstraint(state, UltExpr::create(i, ConstantExpr::create(2, Expr::Int32)));      //i < 2
 }
 
-
-//ret = 0 ==> not found
-//ret = i (i > 0) ===> str[i - 1] = c
-
 void SpecialFunctionHandler::handleMemchr(ExecutionState &state,
                                                  KInstruction *target,
                                                  std::vector<ref<Expr> > &arguments) {
@@ -1726,10 +1720,6 @@ void SpecialFunctionHandler::handleMemchr(ExecutionState &state,
   bool success = state.addressSpace.resolveOne(address, op_str);
   assert(success && "unable to resolve address of str");
   const ObjectState *os_str = op_str.second;
-
-  llvm::raw_ostream &output = llvm::outs();
-  // output << "str[0] = " << os_str->read(0, Expr::Int8) << "\n";
-  // output << "c = " << c << "\n";
 
   ref<Expr> rhs = NeExpr::create(os_str->read(0, Expr::Int8), c);
   for (int i = 1; i < n; i++)
