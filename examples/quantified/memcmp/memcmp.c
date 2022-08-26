@@ -10,8 +10,7 @@ int match(char *a, char* b, int n)
         klee_assert(!klee_is_symbolic(&n));
         uint32_t eqv, i;
         klee_make_symbolic(&i, sizeof(i), "memcmp_return_value");
-        klee_make_symbolic(&eqv, sizeof(eqv), "eqv");
-        klee_memcmp(a, b, n, eqv, i);
+        klee_memcmp(a, b, n, i);
         return i;
 }
 

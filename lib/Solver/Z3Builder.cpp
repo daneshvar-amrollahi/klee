@@ -891,22 +891,12 @@ Z3ASTHandle Z3Builder::constructActual(ref<Expr> e, int *width_out) {
   case Expr::Exists: {
     ExistsExpr *ee = cast<ExistsExpr>(e);
     *width_out = 1;
-
-    Z3_sort bv = Z3_mk_bv_sort(ctx, 32);
-    Z3_symbol   s  = Z3_mk_string_symbol(ctx, ee->bound_var.c_str());
-    Z3_ast bound_var = Z3_mk_const(ctx, s, bv);      
-
-    Z3_ast hack_bound_var = construct(ee->var, width_out);
-    Z3_ast force_equality = Z3_mk_eq(ctx, bound_var, hack_bound_var);
+    Z3_ast bound_var = construct(ee->var, width_out);
     Z3_ast body = construct(ee->body, width_out);
-
-    Z3_ast and_args[2] = {force_equality, body};
-    Z3_ast anded_body = Z3_mk_and(ctx, 2, and_args); 
-
     Z3_app bound_vars[] = {(Z3_app) bound_var};
     int num_bound_vars = 1;
     int weight = 0;
-    return existsExpr(weight, num_bound_vars, anded_body, bound_vars); 
+    return existsExpr(weight, num_bound_vars, body, bound_vars); 
   }
 
 // unused due to canonicalization
