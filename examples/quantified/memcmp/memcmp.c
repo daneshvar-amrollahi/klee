@@ -8,7 +8,7 @@ match(char *a, char* b, int n) returns 0 if a and b are equal, and 1 otherwise.
 int match(char *a, char* b, int n) 
 {
         klee_assert(!klee_is_symbolic(&n));
-        uint32_t eqv, i;
+        uint32_t i;
         klee_make_symbolic(&i, sizeof(i), "memcmp_return_value");
         klee_memcmp(a, b, n, i);
         return i;
