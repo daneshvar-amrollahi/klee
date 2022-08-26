@@ -166,6 +166,7 @@ void Expr::printKind(llvm::raw_ostream &os, Kind k) {
     X(Sge);
     X(Forall);
     X(Exists);
+    X(BoundVar);
 #undef X
   default:
     assert(0 && "invalid kind");

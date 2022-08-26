@@ -870,6 +870,13 @@ Z3ASTHandle Z3Builder::constructActual(ref<Expr> e, int *width_out) {
     return sbvLeExpr(left, right);
   }
 
+  case Expr::BoundVar: {
+    BoundVarExpr *bve = cast<BoundVarExpr>(e);
+    Z3_symbol symb = Z3_mk_string_symbol(ctx, bve->name.c_str());
+    Z3_sort bv_sort = Z3_mk_bv_sort(ctx, 32);
+    return Z3ASTHandle(Z3_mk_const(ctx, symb, bv_sort), ctx);
+  }
+
   case Expr::Forall: {
     ForallExpr *fe = cast<ForallExpr>(e);
     *width_out = 1;
@@ -877,12 +884,19 @@ Z3ASTHandle Z3Builder::constructActual(ref<Expr> e, int *width_out) {
     // ref<Expr> concatQuantifiedVar = ConcatQuantifiedVarExpr::create(fe->var->getKid(0), fe->var->getKid(1));
     // concatQuantifiedVar->quantifiedVarName = fe->bound_var;
 
-    construct(fe->var, width_out);
-    Z3_ast bound_var = last_z3_mk_const ;
-    Z3_ast body = construct(fe->body, width_out);
+    // construct(fe->var, width_out);
+    // Z3_ast bound_var = last_z3_mk_const ;
+    // Z3_ast body = construct(fe->body, width_out);
 
     // printf("case Expr::Forall bound_var = %s\n", Z3_ast_to_string(ctx, bound_var));
     // printf("case Expr::Forall body = %s\n", Z3_ast_to_string(ctx, body));
+
+
+    Z3_ast bound_var = construct(fe->var, width_out);
+    printf("case Expr::Forall bound_var = %s\n", Z3_ast_to_string(ctx, bound_var));
+
+    Z3_ast body = construct(fe->body, width_out);
+    printf("case Expr::Forall body = %s\n", Z3_ast_to_string(ctx, body));
 
     Z3_app bound_vars[] = {(Z3_app) bound_var};
     int num_bound_vars = 1;

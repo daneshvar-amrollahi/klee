@@ -1651,8 +1651,10 @@ void SpecialFunctionHandler::handleMemcmp(ExecutionState &state,
   ref<Expr> a = arguments[0];
   ref<Expr> b = arguments[1];
   ref<Expr> n = arguments[2];
-  ref<Expr> fqv = arguments[3];
+  // ref<Expr> fqv = arguments[3];
   ref<Expr> i = arguments[4];
+
+  ref<Expr> fqv = BoundVarExpr::create("fqv");
       
   ObjectPair op_a;
   ref<klee::ConstantExpr> address = cast<klee::ConstantExpr>(a);
@@ -1672,8 +1674,8 @@ void SpecialFunctionHandler::handleMemcmp(ExecutionState &state,
   ref<Expr> body = EqExpr::create(aeqv, beqv);
   ref<Expr> forall = ForallExpr::create("fqv", fqv, body);
   
-  executor.addConstraint(state, UgeExpr::create(fqv, ConstantExpr::create(0, Expr::Int32)));  //eqv >= 0
-  executor.addConstraint(state, UltExpr::create(fqv, n));                                     //eqv < n
+  executor.addConstraint(state, UgeExpr::create(fqv, ConstantExpr::create(0, Expr::Int32)));  //fqv >= 0
+  executor.addConstraint(state, UltExpr::create(fqv, n));                                     //fqv < n
   executor.addConstraint(state, forall);
 }
 
