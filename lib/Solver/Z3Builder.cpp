@@ -456,6 +456,11 @@ Z3ASTHandle Z3Builder::getArrayForUpdate(const Array *root,
 }
 
 
+Z3ASTHandle Z3Builder::boundVarExpr(Z3_symbol symb, Z3_sort bv_sort)
+{
+  return Z3ASTHandle(Z3_mk_const(ctx, symb, bv_sort), ctx);
+}
+
 Z3ASTHandle Z3Builder::forallExpr(unsigned int weight, unsigned int num_bound_vars, Z3_ast body, Z3_app bound_vars[]) {
   Z3_ast axiom = Z3_mk_forall_const(ctx, weight, num_bound_vars, bound_vars, 0, 0, body);
   return Z3ASTHandle(axiom, ctx);
@@ -870,20 +875,18 @@ Z3ASTHandle Z3Builder::constructActual(ref<Expr> e, int *width_out) {
     return sbvLeExpr(left, right);
   }
 
+  case Expr::BoundVar: {
+    BoundVarExpr *bve = cast<BoundVarExpr>(e);
+    Z3_symbol symb = Z3_mk_string_symbol(ctx, bve->name.c_str());
+    Z3_sort bv_sort = Z3_mk_bv_sort(ctx, 32);
+    return boundVarExpr(symb, bv_sort);
+  }
+
   case Expr::Forall: {
     ForallExpr *fe = cast<ForallExpr>(e);
     *width_out = 1;
-
-    // ref<Expr> concatQuantifiedVar = ConcatQuantifiedVarExpr::create(fe->var->getKid(0), fe->var->getKid(1));
-    // concatQuantifiedVar->quantifiedVarName = fe->bound_var;
-
-    construct(fe->var, width_out);
-    Z3_ast bound_var = last_z3_mk_const ;
+    Z3_ast bound_var = construct(fe->var, width_out);
     Z3_ast body = construct(fe->body, width_out);
-
-    // printf("case Expr::Forall bound_var = %s\n", Z3_ast_to_string(ctx, bound_var));
-    // printf("case Expr::Forall body = %s\n", Z3_ast_to_string(ctx, body));
-
     Z3_app bound_vars[] = {(Z3_app) bound_var};
     int num_bound_vars = 1;
     int weight = 0;
@@ -893,22 +896,12 @@ Z3ASTHandle Z3Builder::constructActual(ref<Expr> e, int *width_out) {
   case Expr::Exists: {
     ExistsExpr *ee = cast<ExistsExpr>(e);
     *width_out = 1;
-
-    Z3_sort bv = Z3_mk_bv_sort(ctx, 32);
-    Z3_symbol   s  = Z3_mk_string_symbol(ctx, ee->bound_var.c_str());
-    Z3_ast bound_var = Z3_mk_const(ctx, s, bv);      
-
-    Z3_ast hack_bound_var = construct(ee->var, width_out);
-    Z3_ast force_equality = Z3_mk_eq(ctx, bound_var, hack_bound_var);
+    Z3_ast bound_var = construct(ee->var, width_out);
     Z3_ast body = construct(ee->body, width_out);
-
-    Z3_ast and_args[2] = {force_equality, body};
-    Z3_ast anded_body = Z3_mk_and(ctx, 2, and_args); 
-
     Z3_app bound_vars[] = {(Z3_app) bound_var};
     int num_bound_vars = 1;
     int weight = 0;
-    return existsExpr(weight, num_bound_vars, anded_body, bound_vars); 
+    return existsExpr(weight, num_bound_vars, body, bound_vars); 
   }
 
 // unused due to canonicalization

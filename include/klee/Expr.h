@@ -179,6 +179,8 @@ public:
     Forall,
     Exists,
 
+    BoundVar,
+
   };
 
   unsigned refCount;
@@ -1000,8 +1002,47 @@ COMPARISON_EXPR_CLASS(Sle)
 COMPARISON_EXPR_CLASS(Sgt)
 COMPARISON_EXPR_CLASS(Sge)
 
-// Quantified Exprs
 
+class BoundVarExpr : public NonConstantExpr {
+  public:
+    static const unsigned numKids = 0;
+    std::string name;
+
+    static const Kind kind = BoundVar;
+    BoundVarExpr(const std::string &name) : name(name) {}
+
+    static ref<Expr> alloc(const std::string &name) {
+      ref<Expr> res(new BoundVarExpr(name));
+      res->computeHash();
+      return res;
+    }
+
+    static ref<Expr> create(const std::string &name) {
+      return alloc(name);
+    }
+
+    int compareContents(const Expr &b) const {
+      return 0;
+    }
+
+    Kind getKind() const { return kind; }
+
+    Width getWidth() const { return Expr::Int32; }
+
+    unsigned getNumKids() const { return numKids; }
+
+    ref<Expr> getKid(unsigned i) const { 
+      return NULL;
+    }
+
+    ref<Expr> rebuild(ref<Expr> kids[]) const {
+      return NULL;
+    }
+
+};
+
+
+// Quantified Exprs
 class QuantifiedExpr : public NonConstantExpr {
   public:
     static const unsigned numKids = 2;    

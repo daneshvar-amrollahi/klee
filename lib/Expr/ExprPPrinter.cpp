@@ -307,7 +307,10 @@ private:
   void printExpr(const Expr *ep, PrintContext &PC, unsigned indent,
                  bool printConstWidth = true) {
     bool simple = hasSimpleKids(ep);
-
+    if (ep->getNumKids() == 0) {
+      return;
+    }
+    
     print(ep->getKid(0), PC);
     for (unsigned i = 1; i < ep->getNumKids(); i++) {
       printSeparator(PC, simple, indent);
