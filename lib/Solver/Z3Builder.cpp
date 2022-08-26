@@ -456,6 +456,11 @@ Z3ASTHandle Z3Builder::getArrayForUpdate(const Array *root,
 }
 
 
+Z3ASTHandle Z3Builder::boundVarExpr(Z3_symbol symb, Z3_sort bv_sort)
+{
+  return Z3ASTHandle(Z3_mk_const(ctx, symb, bv_sort), ctx);
+}
+
 Z3ASTHandle Z3Builder::forallExpr(unsigned int weight, unsigned int num_bound_vars, Z3_ast body, Z3_app bound_vars[]) {
   Z3_ast axiom = Z3_mk_forall_const(ctx, weight, num_bound_vars, bound_vars, 0, 0, body);
   return Z3ASTHandle(axiom, ctx);
@@ -874,7 +879,7 @@ Z3ASTHandle Z3Builder::constructActual(ref<Expr> e, int *width_out) {
     BoundVarExpr *bve = cast<BoundVarExpr>(e);
     Z3_symbol symb = Z3_mk_string_symbol(ctx, bve->name.c_str());
     Z3_sort bv_sort = Z3_mk_bv_sort(ctx, 32);
-    return Z3ASTHandle(Z3_mk_const(ctx, symb, bv_sort), ctx);
+    return boundVarExpr(symb, bv_sort);
   }
 
   case Expr::Forall: {
