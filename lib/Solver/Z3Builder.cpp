@@ -880,24 +880,8 @@ Z3ASTHandle Z3Builder::constructActual(ref<Expr> e, int *width_out) {
   case Expr::Forall: {
     ForallExpr *fe = cast<ForallExpr>(e);
     *width_out = 1;
-
-    // ref<Expr> concatQuantifiedVar = ConcatQuantifiedVarExpr::create(fe->var->getKid(0), fe->var->getKid(1));
-    // concatQuantifiedVar->quantifiedVarName = fe->bound_var;
-
-    // construct(fe->var, width_out);
-    // Z3_ast bound_var = last_z3_mk_const ;
-    // Z3_ast body = construct(fe->body, width_out);
-
-    // printf("case Expr::Forall bound_var = %s\n", Z3_ast_to_string(ctx, bound_var));
-    // printf("case Expr::Forall body = %s\n", Z3_ast_to_string(ctx, body));
-
-
     Z3_ast bound_var = construct(fe->var, width_out);
-    printf("case Expr::Forall bound_var = %s\n", Z3_ast_to_string(ctx, bound_var));
-
     Z3_ast body = construct(fe->body, width_out);
-    printf("case Expr::Forall body = %s\n", Z3_ast_to_string(ctx, body));
-
     Z3_app bound_vars[] = {(Z3_app) bound_var};
     int num_bound_vars = 1;
     int weight = 0;

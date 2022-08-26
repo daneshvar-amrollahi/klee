@@ -1651,32 +1651,51 @@ void SpecialFunctionHandler::handleMemcmp(ExecutionState &state,
   ref<Expr> a = arguments[0];
   ref<Expr> b = arguments[1];
   ref<Expr> n = arguments[2];
-  // ref<Expr> fqv = arguments[3];
+  ref<Expr> eqv = arguments[3];
   ref<Expr> i = arguments[4];
 
   ref<Expr> fqv = BoundVarExpr::create("fqv");
-      
+
+  
   ObjectPair op_a;
   ref<klee::ConstantExpr> address = cast<klee::ConstantExpr>(a);
   bool success = state.addressSpace.resolveOne(address, op_a);
   assert(success && "unable to resolve address of a");
   const ObjectState *os_a = op_a.second;
-  ref<Expr> aeqv = os_a->read(fqv, Expr::Int8);
+  ref<Expr> aeqv = os_a->read(eqv, Expr::Int8);
 
   ObjectPair op_b;
   ref<klee::ConstantExpr> address_b = cast<klee::ConstantExpr>(b);
   success = state.addressSpace.resolveOne(address_b, op_b);
   assert(success && "unable to resolve address of b");
   const ObjectState *os_b = op_b.second;
-  ref<Expr> beqv = os_b->read(fqv, Expr::Int8);
+  ref<Expr> beqv = os_b->read(eqv, Expr::Int8);
   
+
+  ref<Expr> ieq1 = EqExpr::create(i, ConstantExpr::create(1, Expr::Int32));
+  ref<Expr> exists_body = NeExpr::create(aeqv, beqv);
+  ref<Expr> ee = ExistsExpr::create("eqv", eqv, exists_body);
+  ref<Expr> impliesExists = Expr::createImplies(ieq1, ee); 
+  executor.addConstraint(state, impliesExists);
+
+
+
+  ref<Expr> ieq0 = EqExpr::create(i, ConstantExpr::create(0, Expr::Int32));
+  ref<Expr> afqv = os_a->read(fqv, Expr::Int8);
+  ref<Expr> bfqv = os_b->read(fqv, Expr::Int8);
   
-  ref<Expr> body = EqExpr::create(aeqv, beqv);
-  ref<Expr> forall = ForallExpr::create("fqv", fqv, body);
+  ref<Expr> forall_body = EqExpr::create(afqv, bfqv);
+  ref<Expr> forall_expr = ForallExpr::create("fqv", fqv, forall_body);
+  ref<Expr> impliesForall = Expr::createImplies(ieq0, forall_expr);
+  executor.addConstraint(state, impliesForall);
   
   executor.addConstraint(state, UgeExpr::create(fqv, ConstantExpr::create(0, Expr::Int32)));  //fqv >= 0
   executor.addConstraint(state, UltExpr::create(fqv, n));                                     //fqv < n
-  executor.addConstraint(state, forall);
+  executor.addConstraint(state, UgeExpr::create(eqv, ConstantExpr::create(0, Expr::Int32)));  //eqv >= 0
+  executor.addConstraint(state, UltExpr::create(eqv, n));                                     //eqv < n  
+  executor.addConstraint(state, UgeExpr::create(i, ConstantExpr::create(0, Expr::Int32)));   //eqv >= 0
+  executor.addConstraint(state, UltExpr::create(i, ConstantExpr::create(2, Expr::Int32)));    //i < 2
+ 
 }
 
 void SpecialFunctionHandler::handleMemchr(ExecutionState &state,
