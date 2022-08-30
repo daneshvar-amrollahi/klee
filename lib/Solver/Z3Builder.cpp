@@ -876,6 +876,7 @@ Z3ASTHandle Z3Builder::constructActual(ref<Expr> e, int *width_out) {
     BoundVarExpr *bve = cast<BoundVarExpr>(e);
     Z3_symbol symb = Z3_mk_string_symbol(ctx, bve->name.c_str());
     Z3_sort bv_sort = Z3_mk_bv_sort(ctx, 32);
+    *width_out = 32;
     return boundVarExpr(symb, bv_sort);
   }
 
