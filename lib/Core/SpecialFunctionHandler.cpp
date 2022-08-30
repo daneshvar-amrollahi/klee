@@ -1680,8 +1680,8 @@ void SpecialFunctionHandler::handleMemcmp(ExecutionState &state,
   ref<Expr> afqv = os_a->read(fqv, Expr::Int8);
   ref<Expr> bfqv = os_b->read(fqv, Expr::Int8);  
   ref<Expr> forall_body = EqExpr::create(afqv, bfqv);
-  ref<Expr> forall_expr = ForallExpr::create("fqv", fqv, forall_body);
-  ref<Expr> impliesForall = Expr::createImplies(ieq0, forall_expr);
+  ref<Expr> fe = ForallExpr::create("fqv", fqv, forall_body);
+  ref<Expr> impliesForall = Expr::createImplies(ieq0, fe);
   executor.addConstraint(state, impliesForall);
   
   executor.addConstraint(state, UgeExpr::create(fqv, ConstantExpr::create(0, Expr::Int32)));  
