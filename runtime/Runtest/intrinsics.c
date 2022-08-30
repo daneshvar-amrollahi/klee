@@ -382,3 +382,5 @@ void klee_dump_constraints() {}
 void klee_memcmp(char *a, char *b, int n, int i);
 
 void klee_memchr(char *str, char c, int n, int ret);
+
+void klee_memrchr(char *str, char c, int n, int ret);

@@ -293,6 +293,7 @@ void klee_add_bpf_call();
 // New special functions
 void klee_memcmp(char *a, char *b, int n, int i);
 void klee_memchr(char *str, char c, int n, int ret);
+void klee_memrchr(char *str, char c, int n, int ret);
 
 #define PERF_MODEL_BRANCH(param, val1, val2)                                   \
   if (param) {                                                                 \
