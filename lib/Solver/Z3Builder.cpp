@@ -19,7 +19,6 @@
 #include "llvm/ADT/StringExtras.h"
 #include "llvm/Support/CommandLine.h"
 
-#include "klee/util/ExprPPrinter.h"
 
 #define MAX_BOUND_VARS 100
 
@@ -125,7 +124,6 @@ Z3SortHandle Z3Builder::getArraySort(Z3SortHandle domainSort,
   return Z3SortHandle(Z3_mk_array_sort(ctx, domainSort, rangeSort), ctx);
 }
 
-Z3_ast last_z3_mk_const;
 Z3ASTHandle Z3Builder::buildArray(const char *name, unsigned indexWidth,
                                   unsigned valueWidth) {
   Z3SortHandle domainSort = getBvSort(indexWidth);
@@ -133,7 +131,6 @@ Z3ASTHandle Z3Builder::buildArray(const char *name, unsigned indexWidth,
   Z3SortHandle t = getArraySort(domainSort, rangeSort);
   Z3_symbol s = Z3_mk_string_symbol(ctx, const_cast<char *>(name));
   Z3_ast ans = Z3_mk_const(ctx, s, t);
-  last_z3_mk_const = ans;
   return Z3ASTHandle(ans, ctx);
 }
 
