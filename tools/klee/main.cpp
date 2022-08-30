@@ -2122,6 +2122,7 @@ static const char *modelledExternals[] = {
     "klee_memcmp"
     "klee_memchr"
     "klee_memrchr"
+    "klee_memmem"
 
     /* tracing functions end */
 
