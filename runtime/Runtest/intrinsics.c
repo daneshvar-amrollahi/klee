@@ -380,9 +380,7 @@ void klee_allow_access(void *ptr, int width) {}
 void klee_dump_constraints() {}
 
 void klee_memcmp(char *a, char *b, int n, int i);
-
 void klee_memchr(char *str, char c, int n, int ret);
-
 void klee_memrchr(char *str, char c, int n, int ret);
-
 void klee_memmem(char* haystack, char* needle, uint32_t haystack_len, uint32_t needle_len, int ret);
+void klee_strspn(char* a, char* b, int len_a, int len_b, int ret);

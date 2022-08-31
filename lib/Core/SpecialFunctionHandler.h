@@ -178,6 +178,7 @@ public:
   HANDLER(handleMemchr);
   HANDLER(handleMemrchr);
   HANDLER(handleMemmem);
+  HANDLER(handleStrspn);
 #undef HANDLER
 
 };
