@@ -1913,14 +1913,6 @@ void SpecialFunctionHandler::handleStrncmp(ExecutionState &state,
   ref<Expr> n = arguments[2];
   ref<Expr> i = arguments[3];
 
-
-  // ref<Expr> e = NeExpr::create(os_a->read(eqv, Expr::Int8), os_b->read(eqv, Expr::Int8));
-  // e = AndExpr::create(e, AndExpr::create(UltExpr::create(eqv, n), UleExpr::create(ConstantExpr::create(0, Expr::Int32), eqv)));
-  // e = ExistsExpr::create("eqv", eqv, e);
-  // executor.addConstraint(state, e);
-
-
-
   ref<Expr> fqv = BoundVarExpr::create("fqv");
   ref<Expr> eqv = BoundVarExpr::create("eqv");
   
