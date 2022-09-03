@@ -181,6 +181,7 @@ static SpecialFunctionHandler::HandlerInfo handlerInfo[] = {
   add("klee_memrchr", handleMemrchr, false),
   add("klee_memmem", handleMemmem, false),
   add("klee_strspn", handleStrspn, false),
+  add("klee_strncmp", handleStrncmp, false),
 
   // operator delete[](void*)
   add("_ZdaPv", handleDeleteArray, false),
@@ -1896,4 +1897,66 @@ void SpecialFunctionHandler::handleStrspn(ExecutionState &state,
 
   executor.addConstraint(state, UleExpr::create(ConstantExpr::create(0, Expr::Int32), ret));
   executor.addConstraint(state, UleExpr::create(ret, len_a));
+}
+
+void SpecialFunctionHandler::handleStrncmp(ExecutionState &state,
+                                                 KInstruction *target,
+                                                 std::vector<ref<Expr> > &arguments) {
+  if (arguments.size() != 4) {
+    executor.terminateStateOnError
+      (state, "Incorrect number of arguments to klee_strncmp",
+       Executor::User);
+  }
+
+  ref<Expr> a = arguments[0];
+  ref<Expr> b = arguments[1];
+  ref<Expr> n = arguments[2];
+  ref<Expr> i = arguments[3];
+
+
+  // ref<Expr> e = NeExpr::create(os_a->read(eqv, Expr::Int8), os_b->read(eqv, Expr::Int8));
+  // e = AndExpr::create(e, AndExpr::create(UltExpr::create(eqv, n), UleExpr::create(ConstantExpr::create(0, Expr::Int32), eqv)));
+  // e = ExistsExpr::create("eqv", eqv, e);
+  // executor.addConstraint(state, e);
+
+
+
+  ref<Expr> fqv = BoundVarExpr::create("fqv");
+  ref<Expr> eqv = BoundVarExpr::create("eqv");
+  
+  ObjectPair op_a;
+  ref<klee::ConstantExpr> address = cast<klee::ConstantExpr>(a);
+  bool success = state.addressSpace.resolveOne(address, op_a);
+  assert(success && "unable to resolve address of a");
+  const ObjectState *os_a = op_a.second;
+
+  ObjectPair op_b;
+  ref<klee::ConstantExpr> address_b = cast<klee::ConstantExpr>(b);
+  success = state.addressSpace.resolveOne(address_b, op_b);
+  assert(success && "unable to resolve address of b");
+  const ObjectState *os_b = op_b.second;
+
+  ref<Expr> ieq1 = EqExpr::create(i, ConstantExpr::create(1, Expr::Int32));
+  ref<Expr> aeqv = os_a->read(eqv, Expr::Int8);
+  ref<Expr> beqv = os_b->read(eqv, Expr::Int8);
+  ref<Expr> exists_body = NeExpr::create(aeqv, beqv);
+  exists_body = AndExpr::create(exists_body, AndExpr::create(UleExpr::create(ConstantExpr::create(0, Expr::Int32), eqv), UltExpr::create(eqv, n)));
+  ref<Expr> ee = ExistsExpr::create("eqv", eqv, exists_body);
+  ref<Expr> impliesExists = Expr::createImplies(ieq1, ee); 
+  executor.addConstraint(state, impliesExists);
+
+  ref<Expr> ieq0 = EqExpr::create(i, ConstantExpr::create(0, Expr::Int32));
+  ref<Expr> afqv = os_a->read(fqv, Expr::Int8);
+  ref<Expr> bfqv = os_b->read(fqv, Expr::Int8);  
+  ref<Expr> forall_body = EqExpr::create(afqv, bfqv);
+  forall_body = Expr::createImplies(AndExpr::create(UleExpr::create(ConstantExpr::create(0, Expr::Int32), fqv), UltExpr::create(fqv, n)), forall_body);
+  ref<Expr> forall_expr = ForallExpr::create("fqv", fqv, forall_body);
+  ref<Expr> impliesForall = Expr::createImplies(ieq0, forall_expr);
+  executor.addConstraint(state, impliesForall);
+  
+  executor.addConstraint(state, UgeExpr::create(fqv, ConstantExpr::create(0, Expr::Int32)));  
+  executor.addConstraint(state, UltExpr::create(fqv, n));                                     
+  executor.addConstraint(state, UgeExpr::create(eqv, ConstantExpr::create(0, Expr::Int32)));  
+  executor.addConstraint(state, UltExpr::create(eqv, n));                                      
+  executor.addConstraint(state, OrExpr::create(ieq1, ieq0));                                  
 }
