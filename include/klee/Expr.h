@@ -1007,18 +1007,18 @@ class BoundVarExpr : public NonConstantExpr {
   public:
     static const unsigned numKids = 0;
     std::string name;
-
     static const Kind kind = BoundVar;
-    BoundVarExpr(const std::string &name) : name(name) {}
+    
+    BoundVarExpr(const std::string &_name) : name(_name) {}
 
-    static ref<Expr> alloc(const std::string &name) {
-      ref<Expr> res(new BoundVarExpr(name));
+    static ref<Expr> alloc(const std::string &_name) {
+      ref<Expr> res(new BoundVarExpr(_name));
       res->computeHash();
       return res;
     }
 
-    static ref<Expr> create(const std::string &name) {
-      return alloc(name);
+    static ref<Expr> create(const std::string &_name) {
+      return alloc(_name);
     }
 
     int compareContents(const Expr &b) const {
@@ -1036,7 +1036,7 @@ class BoundVarExpr : public NonConstantExpr {
     }
 
     ref<Expr> rebuild(ref<Expr> kids[]) const {
-      return NULL;
+      return create(name);
     }
 
 };
