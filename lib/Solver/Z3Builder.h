@@ -103,6 +103,7 @@ public:
 class Z3Builder {
   ExprHashMap<std::pair<Z3ASTHandle, unsigned> > constructed;
   Z3ArrayExprHash _arr_hash;
+  int bound_var_count = 0;
 
 private:
   Z3ASTHandle bvOne(unsigned width);

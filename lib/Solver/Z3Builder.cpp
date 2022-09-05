@@ -19,6 +19,8 @@
 #include "llvm/ADT/StringExtras.h"
 #include "llvm/Support/CommandLine.h"
 
+#include <string>
+
 
 #define MAX_BOUND_VARS 100
 
@@ -873,10 +875,12 @@ Z3ASTHandle Z3Builder::constructActual(ref<Expr> e, int *width_out) {
   }
 
   case Expr::BoundVar: {
-    BoundVarExpr *bve = cast<BoundVarExpr>(e);
-    Z3_symbol symb = Z3_mk_string_symbol(ctx, bve->name.c_str());
+    BoundVarExpr *be = cast<BoundVarExpr>(e);
+    std::string bound_var_name = be->name /*+ std::to_string(bound_var_count) */;
+    Z3_symbol symb = Z3_mk_string_symbol(ctx, bound_var_name.c_str());
     Z3_sort bv_sort = Z3_mk_bv_sort(ctx, 32);
     *width_out = 32;
+    bound_var_count++;
     return boundVarExpr(symb, bv_sort);
   }
 
