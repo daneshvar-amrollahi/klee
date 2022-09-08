@@ -1846,51 +1846,73 @@ void SpecialFunctionHandler::handleMemmem(ExecutionState &state,
   assert(success && "unable to resolve address of needle");
   const ObjectState *os_needle = op_needle.second;
 
-  ref<Expr> fqv0 = BoundVarExpr::create("fqv0");
-  ref<Expr> eqv0 = BoundVarExpr::create("eqv0");
-  ref<Expr> e = NeExpr::create(os_needle->read(eqv0, Expr::Int8), os_haystack->read(AddExpr::create(fqv0, eqv0), Expr::Int8));
-  e = AndExpr::create(e, UleExpr::create(ConstantExpr::create(0, Expr::Int32), eqv0));
-  e = AndExpr::create(e, UltExpr::create(eqv0, needle_len));
-  e = ExistsExpr::create("eqv0", eqv0, e);
-  e = Expr::createImplies(UltExpr::create(fqv0, SubExpr::create(haystack_len, needle_len)), e);
-  e = ForallExpr::create("fqv0", fqv0, e);
-  e = Expr::createImplies(EqExpr::create(ret, haystack_len), e);
-  executor.addConstraint(state, e); 
+  ref<Expr> i = BoundVarExpr::create("i");
+  ref<Expr> j = BoundVarExpr::create("j");
+  ref<Expr> e;
 
-  ref<Expr> fqv1 = BoundVarExpr::create("fqv1");
-  ref<Expr> lhs = EqExpr::create(os_haystack->read(AddExpr::create(ret, fqv1), Expr::Int8), os_needle->read(fqv1, Expr::Int8));
-  lhs = AndExpr::create(lhs, UleExpr::create(ConstantExpr::create(0, Expr::Int32), fqv1));
-  lhs = AndExpr::create(lhs, UltExpr::create(fqv1, needle_len));
-  lhs = ForallExpr::create("fqv1", fqv1, lhs);
+  e = NeExpr::create(os_haystack->read(AddExpr::create(i, j), Expr::Int8), os_needle->read(j, Expr::Int8));
+  e = AndExpr::create(e, AndExpr::create(
+    UleExpr::create(ConstantExpr::create(0, Expr::Int32), j),
+    UltExpr::create(j, needle_len))
+  );
+  e = ExistsExpr::create("j", j, e);
+  e = Expr::createImplies(
+    AndExpr::create(
+      UleExpr::create(ConstantExpr::create(0, Expr::Int32), i),
+      UleExpr::create(i, SubExpr::create(haystack_len, needle_len))
+    ),
+    e
+  );
+  e = ForallExpr::create("i", i, e);
+  e = Expr::createImplies(
+    EqExpr::create(ret, haystack_len),
+    e
+  );
+  executor.addConstraint(state, e); // (ret == haystack_len) ==> (∀ i: 0 <= i <= haystack_len - needle_len ⇒ ∃ j: 0 <= j < needle_len ∧ haystack[i + j] != needle[j])
 
-  ref<Expr> fqv2 = BoundVarExpr::create("fqv2");
-  ref<Expr> eqv1 = BoundVarExpr::create("eqv1");
-  ref<Expr> rhs = NeExpr::create(os_haystack->read(AddExpr::create(eqv1, fqv2), Expr::Int8), os_needle->read(eqv1, Expr::Int8));
-  rhs = AndExpr::create(rhs, UleExpr::create(ConstantExpr::create(0, Expr::Int32), eqv1));
-  rhs = AndExpr::create(rhs, UltExpr::create(eqv1, needle_len));
-  rhs = ExistsExpr::create("eqv1", eqv1, rhs);
-  rhs = Expr::createImplies(UltExpr::create(fqv2, ret), rhs);
-  rhs = ForallExpr::create("fqv2", fqv2, rhs);
+  e = EqExpr::create(os_haystack->read(AddExpr::create(i, ret), Expr::Int8), os_needle->read(i, Expr::Int8));
+  e = Expr::createImplies(
+    AndExpr::create(
+      UleExpr::create(ConstantExpr::create(0, Expr::Int32), i),
+      UltExpr::create(i, needle_len)
+    ),
+    e
+  );
+  e = ForallExpr::create("i", i, e);
+  e = Expr::createImplies(
+    AndExpr::create(
+      UleExpr::create(ConstantExpr::create(0, Expr::Int32), ret),
+      UltExpr::create(ret, haystack_len)
+    ),
+    e
+  );
+  executor.addConstraint(state, e); // 0 <= ret < haystack_len ⇒ (∀ i: 0 <= i < needle_len ⇒ haystack[i + ret] = needle[i])
 
-  e = AndExpr::create(lhs, rhs);
-  e = Expr::createImplies(UltExpr::create(ret, haystack_len), e);
-  executor.addConstraint(state, e);
-  
-  executor.addConstraint(state, UgeExpr::create(fqv0, ConstantExpr::create(0, Expr::Int32)));  
-  executor.addConstraint(state, UltExpr::create(fqv0, SubExpr::create(haystack_len, needle_len))); 
-  executor.addConstraint(state, UgeExpr::create(eqv0, ConstantExpr::create(0, Expr::Int32)));  
-  executor.addConstraint(state, UltExpr::create(eqv0, needle_len));
-
-  executor.addConstraint(state, UgeExpr::create(fqv1, ConstantExpr::create(0, Expr::Int32)));  
-  executor.addConstraint(state, UltExpr::create(fqv1, needle_len));
-
-  executor.addConstraint(state, UgeExpr::create(fqv2, ConstantExpr::create(0, Expr::Int32)));  
-  executor.addConstraint(state, UltExpr::create(fqv2, ret));
-  executor.addConstraint(state, UgeExpr::create(eqv1, ConstantExpr::create(0, Expr::Int32)));  
-  executor.addConstraint(state, UltExpr::create(eqv1, needle_len));
-
-  executor.addConstraint(state, UgeExpr::create(ret, ConstantExpr::create(0, Expr::Int32)));  
-  executor.addConstraint(state, UleExpr::create(ret, haystack_len)); 
+  e = NeExpr::create(os_haystack->read(AddExpr::create(i, j), Expr::Int8), os_needle->read(j, Expr::Int8));
+  e = AndExpr::create(
+    e,
+    AndExpr::create(
+      UleExpr::create(ConstantExpr::create(0, Expr::Int32), j),
+      UltExpr::create(j, needle_len)
+    )
+  );
+  e = ExistsExpr::create("j", j, e);
+  e = Expr::createImplies(
+    AndExpr::create(
+      UleExpr::create(ConstantExpr::create(0, Expr::Int32), i),
+      UltExpr::create(i, ret)
+    ),
+    e
+  );
+  e = ForallExpr::create("i", i, e);
+  e = Expr::createImplies(
+    AndExpr::create(
+      UleExpr::create(ConstantExpr::create(0, Expr::Int32), ret),
+      UltExpr::create(ret, haystack_len)
+    ),
+    e
+  );
+  executor.addConstraint(state, e); // 0 <= ret < haystack_len ⇒ (∀ i: 0 <= i < ret ⇒ ∃ j: 0 <= j < needle_len ∧ haystack[i + j] != needle[j])
 }
 
 void SpecialFunctionHandler::handleStrspn(ExecutionState &state,

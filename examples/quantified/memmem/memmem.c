@@ -20,24 +20,23 @@ int main() {
         klee_make_symbolic(needle, needle_len, "needle");
         char* res = match(haystack, needle, haystack_len, needle_len);
         
-        /*
-        // Test #0: match found - check for first
-        klee_assume(res == haystack + 2);
-        klee_assume(haystack[0] == needle[0]); 
-        klee_assume(haystack[1] == needle[1]); // should fail on this
-        */
+        
+        // Test #0: match found on index 2 - check for no occurences before that
+        // klee_assume(res == haystack + 2);
+        // klee_assume(haystack[1] == needle[0]); 
+        // klee_assume(haystack[2] == needle[1]); // should fail on this
+        
 
-        /*
+        
         // Test #1: match found - check if match is actually found
-        klee_assume(res == haystack + 2);
-        klee_assume(haystack[2] != needle[0]);
-        klee_assume(haystack[3] != needle[1]); // should fail on this
-        */
+        // klee_assume(res == haystack + 2);
+        // klee_assume(haystack[2] == needle[0]);
+        // klee_assume(haystack[3] != needle[1]); // should fail on this
+        
 
-       /*
-       // Test #2: match not found (needs fix)
-       klee_assume(res == haystack + haystack_len);
-       klee_assume(haystack[1] == needle[0]);
-       klee_assume(haystack[2] == needle[1]);
-       */
+       
+        // Test #2: match not found 
+        // klee_assume(res == haystack + haystack_len);
+        // klee_assume(haystack[2] == needle[0]);
+        // klee_assume(haystack[3] == needle[1]);
 }
