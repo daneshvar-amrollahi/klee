@@ -298,6 +298,7 @@ void klee_memmem(char* haystack, char* needle, uint32_t haystack_len, uint32_t n
 void klee_strspn(char* a, char* b, int len_a, int len_b, int ret);
 void klee_strncmp(char* a, char* b, int n, int ret);
 void klee_strlen(char* str, int ret);
+void klee_strcmp(char* a, char* b, int len_a, int len_b, int ret);
 
 #define PERF_MODEL_BRANCH(param, val1, val2)                                   \
   if (param) {                                                                 \
