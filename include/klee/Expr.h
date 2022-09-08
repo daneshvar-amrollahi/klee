@@ -1022,7 +1022,10 @@ class BoundVarExpr : public NonConstantExpr {
     }
 
     int compareContents(const Expr &b) const {
-      return 0;
+      const BoundVarExpr &bv = static_cast<const BoundVarExpr&>(b);
+      if (bv.name == name)
+        return 0;
+      return 1;
     }
 
     Kind getKind() const { return kind; }
