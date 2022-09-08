@@ -291,7 +291,7 @@ void klee_map_symbol_names(char* symbol_name, int occurence, void*key, int width
 void klee_add_bpf_call();
 
 // New special functions
-void klee_memcmp(char *a, char *b, int n, int i);
+void klee_memcmp(char *a, char *b, int n, int ret);
 void klee_memchr(char *str, char c, int n, int ret);
 void klee_memrchr(char *str, char c, int n, int ret);
 void klee_memmem(char* haystack, char* needle, uint32_t haystack_len, uint32_t needle_len, int ret);
