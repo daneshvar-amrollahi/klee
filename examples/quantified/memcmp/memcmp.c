@@ -2,7 +2,7 @@
 #include <stdio.h>
 
 
-int match(char *a, char* b, int n) 
+int match(void *a, void* b, int n) 
 {
         uint32_t ret;
         klee_make_symbolic(&ret, sizeof(ret), "memcmp_return_value");
