@@ -94,7 +94,7 @@ Z3Builder::Z3Builder(bool autoClearConstructCache, const char* z3LogInteractionF
   Z3_config cfg = Z3_mk_config();
   // It is very important that we ask Z3 to let us manage memory so that
   // we are able to cache expressions and sorts.
-  ctx = Z3_mk_context(cfg); //Previously was Z3_mk_context_rc(cfg)
+  ctx = Z3_mk_context_rc(cfg);
   // Make sure we handle any errors reported by Z3.
   Z3_set_error_handler(ctx, custom_z3_error_handler);
   // When emitting Z3 expressions make them SMT-LIBv2 compliant
@@ -132,8 +132,7 @@ Z3ASTHandle Z3Builder::buildArray(const char *name, unsigned indexWidth,
   Z3SortHandle rangeSort = getBvSort(valueWidth);
   Z3SortHandle t = getArraySort(domainSort, rangeSort);
   Z3_symbol s = Z3_mk_string_symbol(ctx, const_cast<char *>(name));
-  Z3_ast ans = Z3_mk_const(ctx, s, t);
-  return Z3ASTHandle(ans, ctx);
+  return Z3ASTHandle(Z3_mk_const(ctx, s, t), ctx);
 }
 
 Z3ASTHandle Z3Builder::getTrue() { return Z3ASTHandle(Z3_mk_true(ctx), ctx); }
@@ -404,6 +403,7 @@ Z3ASTHandle Z3Builder::getInitialArray(const Array *root) {
                                ? (32 - uid_length)
                                : root->name.length();
     std::string unique_name = root->name.substr(0, space) + unique_id;
+
     array_expr = buildArray(unique_name.c_str(), root->getDomain(),
                             root->getRange());
 
@@ -482,7 +482,6 @@ Z3_ast mk_var(Z3_context ctx, const char * name, Z3_sort ty)
 Z3ASTHandle Z3Builder::construct(ref<Expr> e, int *width_out) {
   // TODO: We could potentially use Z3_simplify() here
   // to store simpler expressions.
-  llvm::raw_ostream &output = llvm::outs();  
   if (!UseConstructHashZ3 || isa<ConstantExpr>(e)) {
     return constructActual(e, width_out);
   } else {
