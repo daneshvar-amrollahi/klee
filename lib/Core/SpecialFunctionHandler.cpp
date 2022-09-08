@@ -184,6 +184,7 @@ static SpecialFunctionHandler::HandlerInfo handlerInfo[] = {
   add("klee_strncmp", handleStrncmp, false),
   add("klee_strlen", handleStrlen, false),
   add("klee_strcmp", handleStrcmp, false),
+  add("klee_strchr", handleStrchr, false),
 
   // operator delete[](void*)
   add("_ZdaPv", handleDeleteArray, false),
@@ -2247,4 +2248,38 @@ void SpecialFunctionHandler::handleStrcmp(ExecutionState &state,
     e
   );
   executor.addConstraint(state, e);
+}
+
+void SpecialFunctionHandler::handleStrchr(ExecutionState &state,
+                                                 KInstruction *target,
+                                                 std::vector<ref<Expr> > &arguments) {
+  if (arguments.size() != 4) {
+    executor.terminateStateOnError
+      (state, "Incorrect number of arguments to klee_strchr",
+       Executor::User);
+  }
+
+  ref<Expr> str = arguments[0];  
+  ref<Expr> c = arguments[1];
+  ref<Expr> n = arguments[2];
+  ref<Expr> ret = arguments[3];
+
+  ObjectPair op_str;
+  ref<klee::ConstantExpr> address = cast<klee::ConstantExpr>(str);
+  bool success = state.addressSpace.resolveOne(address, op_str);
+  assert(success && "unable to resolve address of str");
+  const ObjectState *os_str = op_str.second;
+
+  ref<Expr> i = BoundVarExpr::create("i");
+  ref<Expr> e = ForallExpr::create("i", i, Expr::createImplies(UltExpr::create(i, n), NeExpr::create(os_str->read(i, Expr::Int8), c)));
+  e = Expr::createImplies(EqExpr::create(ret, n), e); 
+  executor.addConstraint(state, e); // (ret == n) ==> (∀ i: i < n ⇒ str[i] != c) 
+
+  e = ForallExpr::create("i", i, Expr::createImplies(UltExpr::create(i, ret), NeExpr::create(os_str->read(i, Expr::Int8), c)));
+  e = AndExpr::create(e, EqExpr::create(os_str->read(ret, Expr::Int8), c));
+  e = Expr::createImplies(UltExpr::create(ret, n), e);
+  executor.addConstraint(state, e); // ret < n ⇒ (∀ i: i < ret ⇒ str[i] != c) ∧ str[ret] = c
+
+  executor.addConstraint(state, UgeExpr::create(ret, ConstantExpr::create(0, Expr::Int32)));  
+  executor.addConstraint(state, UleExpr::create(ret, n)); 
 }

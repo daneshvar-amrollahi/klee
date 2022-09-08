@@ -182,6 +182,7 @@ public:
   HANDLER(handleStrncmp);
   HANDLER(handleStrlen);
   HANDLER(handleStrcmp);
+  HANDLER(handleStrchr);
 #undef HANDLER
 
 };

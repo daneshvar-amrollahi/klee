@@ -2126,6 +2126,7 @@ static const char *modelledExternals[] = {
     "klee_strspn"
     "klee_strlen"
     "klee_strcmp"
+    "klee_strchr"
 
     /* tracing functions end */
 
