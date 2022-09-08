@@ -1,7 +1,6 @@
 #include "klee/klee.h"
 #include <stdio.h>
 
-
 int match(void *a, void* b, int n) 
 {
         uint32_t ret;

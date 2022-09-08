@@ -3,7 +3,7 @@
 
 int match(char* a, char* b, uint32_t a_len, uint32_t b_len) {
         uint32_t ret;
-        klee_make_symbolic(&ret, sizeof(ret), "strspn_return_value");
+        klee_make_symbolic(&ret, sizeof(ret), "strcmp_return_value");
         klee_strcmp(a, b, a_len, b_len, ret);
         return ret;
 }

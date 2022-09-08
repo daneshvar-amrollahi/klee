@@ -3,7 +3,7 @@
 
 char* match(char* str, char c, uint32_t n) {
         uint32_t ret, impliesVar;
-        klee_make_symbolic(&ret, sizeof(ret), "memchr_return_value");
+        klee_make_symbolic(&ret, sizeof(ret), "strchr_return_value");
         klee_strchr(str, c, n, ret);
         return str + ret;
 }

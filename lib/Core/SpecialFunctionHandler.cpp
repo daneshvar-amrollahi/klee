@@ -1762,21 +1762,18 @@ void SpecialFunctionHandler::handleMemchr(ExecutionState &state,
   assert(success && "unable to resolve address of str");
   const ObjectState *os_str = op_str.second;
 
-  ref<Expr> fqv0 = BoundVarExpr::create("fqv0");
-  ref<Expr> e = ForallExpr::create("fqv0", fqv0, Expr::createImplies(UltExpr::create(fqv0, n), NeExpr::create(os_str->read(fqv0, Expr::Int8), c)));
+  ref<Expr> i = BoundVarExpr::create("i");
+  ref<Expr> e = ForallExpr::create("i", i, Expr::createImplies(UltExpr::create(i, n), NeExpr::create(os_str->read(i, Expr::Int8), c)));
   e = Expr::createImplies(EqExpr::create(ret, n), e); 
   executor.addConstraint(state, e); // (ret == n) ==> (∀ fqv: fqv < n ⇒ str[fqv] != c) 
 
-  ref<Expr> fqv1 = BoundVarExpr::create("fqv1");
-  e = ForallExpr::create("fqv1", fqv1, Expr::createImplies(UltExpr::create(fqv1, ret), NeExpr::create(os_str->read(fqv1, Expr::Int8), c)));
+  e = ForallExpr::create("i", i, Expr::createImplies(UltExpr::create(i, ret), NeExpr::create(os_str->read(i, Expr::Int8), c)));
   e = AndExpr::create(e, EqExpr::create(os_str->read(ret, Expr::Int8), c));
   e = Expr::createImplies(UltExpr::create(ret, n), e);
-  executor.addConstraint(state, e); // ret < n ⇒ (∀ fqv1: fqv1 < ret ⇒ str[fqv1] != c) ∧ str[ret] = c
+  executor.addConstraint(state, e); // ret < n ⇒ (∀ i: i < ret ⇒ str[i] != c) ∧ str[ret] = c
 
-  executor.addConstraint(state, UgeExpr::create(fqv0, ConstantExpr::create(0, Expr::Int32)));  
-  executor.addConstraint(state, UltExpr::create(fqv0, n)); 
-  executor.addConstraint(state, UgeExpr::create(fqv1, ConstantExpr::create(0, Expr::Int32)));  
-  executor.addConstraint(state, UltExpr::create(fqv1, n)); 
+  executor.addConstraint(state, UgeExpr::create(i, ConstantExpr::create(0, Expr::Int32)));  
+  executor.addConstraint(state, UltExpr::create(i, n)); 
   executor.addConstraint(state, UgeExpr::create(ret, ConstantExpr::create(0, Expr::Int32)));  
   executor.addConstraint(state, UleExpr::create(ret, n)); 
 }
@@ -1801,25 +1798,21 @@ void SpecialFunctionHandler::handleMemrchr(ExecutionState &state,
   assert(success && "unable to resolve address of str");
   const ObjectState *os_str = op_str.second;
 
-  ref<Expr> fqv0 = BoundVarExpr::create("fqv0");
-  ref<Expr> e = ForallExpr::create("fqv0", fqv0, Expr::createImplies(UltExpr::create(fqv0, n), NeExpr::create(os_str->read(fqv0, Expr::Int8), c)));
+  ref<Expr> i = BoundVarExpr::create("i");
+  ref<Expr> e = ForallExpr::create("i", i, Expr::createImplies(UltExpr::create(i, n), NeExpr::create(os_str->read(i, Expr::Int8), c)));
   e = Expr::createImplies(EqExpr::create(ret, n), e); 
   executor.addConstraint(state, e); // (ret == n) ==> (∀ fqv: fqv < n ⇒ str[fqv] != c) 
 
-  ref<Expr> fqv1 = BoundVarExpr::create("fqv1");
-  e = ForallExpr::create("fqv1", fqv1, Expr::createImplies(UltExpr::create(ret, fqv1), NeExpr::create(os_str->read(fqv1, Expr::Int8), c)));
+  e = ForallExpr::create("i", i, Expr::createImplies(UltExpr::create(ret, i), NeExpr::create(os_str->read(i, Expr::Int8), c)));
   e = AndExpr::create(e, EqExpr::create(os_str->read(ret, Expr::Int8), c));
   e = Expr::createImplies(UltExpr::create(ret, n), e);
-  executor.addConstraint(state, e); // ret < n ⇒ (∀ fqv1: fqv1 > ret ⇒ str[fqv1] != c) ∧ str[ret] = c
+  executor.addConstraint(state, e); // ret < n ⇒ (∀ i: i > ret ⇒ str[i] != c) ∧ str[ret] = c
 
   
-  executor.addConstraint(state, UgeExpr::create(fqv0, ConstantExpr::create(0, Expr::Int32)));  
-  executor.addConstraint(state, UltExpr::create(fqv0, n)); 
-  executor.addConstraint(state, UgeExpr::create(fqv1, ConstantExpr::create(0, Expr::Int32)));  
-  executor.addConstraint(state, UltExpr::create(fqv1, n)); 
+  executor.addConstraint(state, UgeExpr::create(i, ConstantExpr::create(0, Expr::Int32)));  
+  executor.addConstraint(state, UltExpr::create(i, n)); 
   executor.addConstraint(state, UgeExpr::create(ret, ConstantExpr::create(0, Expr::Int32)));  
   executor.addConstraint(state, UleExpr::create(ret, n)); 
-  
 }
 
 void SpecialFunctionHandler::handleMemmem(ExecutionState &state,

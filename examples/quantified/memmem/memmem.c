@@ -1,11 +1,6 @@
 #include "klee/klee.h"
 #include <stdio.h>
 
-
-/*
-match(char* str, char c, uint32_t n) searches for the first occurrence of the character c in the first n bytes of the string pointed to, by the argument str.
-*/
-
 char* match(char* haystack, char* needle, uint32_t haystack_len, uint32_t needle_len) {
         uint32_t ret;
         klee_make_symbolic(&ret, sizeof(ret), "memmem_return_value");

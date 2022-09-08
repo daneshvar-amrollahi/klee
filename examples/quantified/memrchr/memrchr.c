@@ -23,7 +23,7 @@ int main() {
         else
         {
                 // klee_assume(res == str + 2);
-                // klee_assume(str[3] == c);        
+                // klee_assume(str[3] == c);
                 printf("match found\n");
         }
         
