@@ -1943,37 +1943,27 @@ void SpecialFunctionHandler::handleStrspn(ExecutionState &state,
   assert(success && "unable to resolve address of b");
   const ObjectState *os_b = op_b.second;
 
+  ref<Expr> i = BoundVarExpr::create("i");
+  ref<Expr> j = BoundVarExpr::create("j");
+  ref<Expr> e;
 
-  ref<Expr> fqv0 = BoundVarExpr::create("fqv0");
-  ref<Expr> eqv0 = BoundVarExpr::create("eqv0");
-  ref<Expr> e = EqExpr::create(os_a->read(fqv0, Expr::Int8), os_b->read(eqv0, Expr::Int8));
-  e = AndExpr::create(e, UleExpr::create(ConstantExpr::create(0, Expr::Int32), eqv0));
-  e = AndExpr::create(e, UltExpr::create(eqv0, len_b));
-  e = ExistsExpr::create("eqv0", eqv0, e);
-  e = Expr::createImplies(AndExpr::create(UleExpr::create(ConstantExpr::create(0, Expr::Int32), fqv0), UltExpr::create(fqv0, ret)), e);
-  e = ForallExpr::create("fqv0", fqv0, e);
+  e = EqExpr::create(os_a->read(i, Expr::Int8), os_b->read(j, Expr::Int8));
+  e = AndExpr::create(e, UleExpr::create(ConstantExpr::create(0, Expr::Int32), j));
+  e = AndExpr::create(e, UltExpr::create(j, len_b));
+  e = ExistsExpr::create("j", j, e);
+  e = Expr::createImplies(AndExpr::create(UleExpr::create(ConstantExpr::create(0, Expr::Int32), i), UltExpr::create(i, ret)), e);
+  e = ForallExpr::create("i", i, e);
   e = Expr::createImplies(AndExpr::create(UleExpr::create(ConstantExpr::create(1, Expr::Int32), ret), UleExpr::create(ret, len_a)), e);
   executor.addConstraint(state, e);
 
-  ref<Expr> fqv1 = BoundVarExpr::create("fqv1");
-  e = NeExpr::create(os_b->read(fqv1, Expr::Int8), os_a->read(ret, Expr::Int8));
-  e = Expr::createImplies(AndExpr::create(UleExpr::create(ConstantExpr::create(0, Expr::Int32), fqv1), UltExpr::create(fqv1, len_b)), e);
-  e = ForallExpr::create("fqv1", fqv1, e);
+  e = NeExpr::create(os_b->read(i, Expr::Int8), os_a->read(ret, Expr::Int8));
+  e = Expr::createImplies(AndExpr::create(UleExpr::create(ConstantExpr::create(0, Expr::Int32), i), UltExpr::create(i, len_b)), e);
+  e = ForallExpr::create("i", i, e);
   e = Expr::createImplies(AndExpr::create(UleExpr::create(ConstantExpr::create(0, Expr::Int32), ret), UltExpr::create(ret, len_a)), e);
   executor.addConstraint(state, e);
 
   executor.addConstraint(state, UleExpr::create(ConstantExpr::create(0, Expr::Int32), ret));
   executor.addConstraint(state, UleExpr::create(ret, len_a));
-
-  executor.addConstraint(state, UgeExpr::create(fqv0, ConstantExpr::create(0, Expr::Int32)));  
-  executor.addConstraint(state, UltExpr::create(fqv0, ret));
-
-  executor.addConstraint(state, UgeExpr::create(fqv1, ConstantExpr::create(0, Expr::Int32)));  
-  executor.addConstraint(state, UltExpr::create(fqv1, len_b));
-
-  executor.addConstraint(state, UgeExpr::create(eqv0, ConstantExpr::create(0, Expr::Int32)));  
-  executor.addConstraint(state, UltExpr::create(eqv0, len_b));
-
 }
 
 void SpecialFunctionHandler::handleStrncmp(ExecutionState &state,
