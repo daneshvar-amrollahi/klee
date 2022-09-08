@@ -385,3 +385,4 @@ void klee_memrchr(char *str, char c, int n, int ret);
 void klee_memmem(char* haystack, char* needle, uint32_t haystack_len, uint32_t needle_len, int ret);
 void klee_strspn(char* a, char* b, int len_a, int len_b, int ret);
 void klee_strncmp(char* a, char* b, int n, int ret);
+void klee_strlen(char* str, int ret);

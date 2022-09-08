@@ -180,6 +180,7 @@ public:
   HANDLER(handleMemmem);
   HANDLER(handleStrspn);
   HANDLER(handleStrncmp);
+  HANDLER(handleStrlen);
 #undef HANDLER
 
 };

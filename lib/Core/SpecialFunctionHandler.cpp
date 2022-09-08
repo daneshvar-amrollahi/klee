@@ -182,6 +182,7 @@ static SpecialFunctionHandler::HandlerInfo handlerInfo[] = {
   add("klee_memmem", handleMemmem, false),
   add("klee_strspn", handleStrspn, false),
   add("klee_strncmp", handleStrncmp, false),
+  add("klee_strlen", handleStrlen, false),
 
   // operator delete[](void*)
   add("_ZdaPv", handleDeleteArray, false),
@@ -2068,4 +2069,43 @@ void SpecialFunctionHandler::handleStrncmp(ExecutionState &state,
   executor.addConstraint(state, UltExpr::create(i, n));                                     
   executor.addConstraint(state, UleExpr::create(ConstantExpr::create(0, Expr::Int32), j));  
   executor.addConstraint(state, UltExpr::create(j, n));                                 
+}
+
+void SpecialFunctionHandler::handleStrlen(ExecutionState &state,
+                                                 KInstruction *target,
+                                                 std::vector<ref<Expr> > &arguments) {
+  if (arguments.size() != 2) {
+    executor.terminateStateOnError
+      (state, "Incorrect number of arguments to klee_strlen",
+       Executor::User);
+  }
+
+  ref<Expr> str = arguments[0];
+  ref<Expr> ret = arguments[1];
+
+  ref<Expr> i = BoundVarExpr::create("i");
+  ref<Expr> e;
+  
+  ObjectPair op_str;
+  ref<klee::ConstantExpr> address = cast<klee::ConstantExpr>(str);
+  bool success = state.addressSpace.resolveOne(address, op_str);
+  assert(success && "unable to resolve address of a");
+  const ObjectState *os_str = op_str.second;
+
+  e = NeExpr::create(os_str->read(i, Expr::Int8), ConstantExpr::create(0, Expr::Int8));
+  e = Expr::createImplies(
+    AndExpr::create(
+      UleExpr::create(ConstantExpr::create(0, Expr::Int32), i), 
+      UltExpr::create(i, ret)
+    ), 
+    e
+  );
+  e = ForallExpr::create("i", i, e);
+  executor.addConstraint(state, e);
+
+  e = EqExpr::create(os_str->read(ret, Expr::Int8), ConstantExpr::create(0, Expr::Int8));
+  executor.addConstraint(state, e);
+
+  e = SgeExpr::create(ret, ConstantExpr::create(0, Expr::Int32));
+  executor.addConstraint(state, e);
 }
